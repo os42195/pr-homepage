@@ -511,6 +511,73 @@
             height: 28px;
         }
 
+
+        .tennis-ball-icon {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            display: inline-block;
+            overflow: hidden;
+        }
+
+        .tennis-ball-icon::before,
+        .tennis-ball-icon::after {
+            content: "";
+            position: absolute;
+            top: -6px;
+            width: 18px;
+            height: 38px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+        }
+
+        .tennis-ball-icon::before {
+            left: -9px;
+        }
+
+        .tennis-ball-icon::after {
+            right: -9px;
+        }
+
+
+        .tennis-racket-icon {
+            position: relative;
+            width: 34px;
+            height: 34px;
+            display: inline-block;
+            transform: rotate(-35deg);
+        }
+
+        .tennis-racket-icon::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 5px;
+            width: 20px;
+            height: 25px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            box-shadow:
+                inset 6px 0 0 -5px currentColor,
+                inset -6px 0 0 -5px currentColor,
+                inset 0 7px 0 -6px currentColor,
+                inset 0 -7px 0 -6px currentColor;
+        }
+
+        .tennis-racket-icon::after {
+            content: "";
+            position: absolute;
+            top: 23px;
+            left: 16px;
+            width: 5px;
+            height: 13px;
+            border-radius: 4px;
+            background: currentColor;
+            box-shadow: 0 8px 0 -1px currentColor;
+        }
+
         .card:hover .card-icon {
             background-color: var(--color-primary);
             color: var(--color-text-light);
@@ -1080,7 +1147,7 @@
                     <a href="#pillar-tennis" class="pillar-card-link reveal">
                         <div class="card glass-card">
                             <div class="card-icon">
-                                <i data-lucide="dribbble"></i>
+                                <span class="tennis-racket-icon" aria-hidden="true"></span>
                             </div>
                             <h3>テニス指導（現場と理論）</h3>
                             <p class="card-text">
