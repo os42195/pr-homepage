@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>城間修｜沖縄のテニスコーチ・AI活用支援・人生再設計ブログ</title>
+    <meta name="description" content="沖縄・首里を拠点に活動する城間修の公式サイト。テニス指導、シニア向けAI活用支援、人生再設計のヒントを発信。心臓手術からの復帰経験をもとに『人生は何歳からでも更新できる』を届けています。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Inline CSS -->
+    <style>
+        /* Custom CSS for Osamu Shiroma's PR Homepage */
+
+        :root {
+            /* Color System */
+            --color-primary: #D05B43;      /* 首里の赤（テラコッタ・レンガ色） */
+            --color-primary-hover: #B84730;
+            --color-secondary: #2A435C;    /* 深いコバルトブルー・ネイビー */
+            --color-secondary-hover: #1E3145;
+            --color-accent: #5D9CEC;       /* 沖縄のライトブルー・空色 */
+            
+            --color-bg-base: #FAF8F5;      /* 砂浜・漆喰のような温かみのあるオフホワイト */
+            --color-bg-light: #F2ECE4;     /* やや濃いベージュ */
+            --color-bg-dark: #1E2835;      /* ダークトーン（フッター等） */
+            
+            --color-text-main: #2C353F;    /* チャコール（可読性を高めた黒） */
+            --color-text-muted: #5A6572;   /* マイルドなグレー */
+            --color-text-light: #FFFFFF;
+            
+            /* Glassmorphism Details */
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-shadow: 0 8px 32px 0 rgba(42, 67, 92, 0.08);
+            
+            /* Typography */
+            --font-primary: 'Noto Sans JP', 'Inter', sans-serif;
+            --font-display: 'Outfit', sans-serif;
+            
+            /* Spacing & Layout */
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --border-radius-lg: 16px;
+            --border-radius-md: 8px;
+        }
+
+        /* Base Styles & Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--color-bg-base);
+            color: var(--color-text-main);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: var(--transition-smooth);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Utility Layouts */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            padding: 8rem 0;
+            position: relative;
+        }
+
+        .bg-light {
+            background-color: var(--color-bg-light);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-4 {
+            margin-top: 3rem;
+        }
+
+        /* Typography styles */
+        h1, h2, h3, h4 {
+            font-family: var(--font-primary);
+            font-weight: 700;
+            color: var(--color-secondary);
+        }
+
+        .section-subtitle {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--color-primary);
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-title {
+            font-size: 2.25rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-description {
+            color: var(--color-text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 3rem auto;
+        }
+
+        .paragraph {
+            margin-bottom: 1.5rem;
+            color: var(--color-text-main);
+            font-size: 1.05rem;
+        }
+
+        /* Button UI */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.8rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            border: none;
+            transition: var(--transition-smooth);
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: var(--color-text-light);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(208, 91, 67, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--color-secondary);
+            border: 2px solid var(--color-secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--color-secondary);
+            color: var(--color-text-light);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary-outline {
+            background-color: transparent;
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn-primary-outline:hover {
+            background-color: var(--color-primary);
+            color: var(--color-text-light);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+        }
+
+        /* Glassmorphism Base Card */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
+            transition: var(--transition-smooth);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(42, 67, 92, 0.12);
+        }
+
+        /* Header & Nav Styling */
+        .glass-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(250, 248, 245, 0.75);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            transition: var(--transition-smooth);
+        }
+
+        .glass-header.scrolled {
+            padding: 0.5rem 0;
+            background: rgba(250, 248, 245, 0.9);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--color-secondary);
+            letter-spacing: -0.02em;
+        }
+
+        .logo-accent {
+            color: var(--color-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--color-text-main);
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-primary);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-secondary);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background-image: url('assets/shuri_tennis_bg.png');
+            background-size: cover;
+            background-position: center;
+            padding-top: 100px;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(250, 248, 245, 0.92) 30%, rgba(250, 248, 245, 0.7) 100%);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background-color: rgba(208, 91, 67, 0.1);
+            color: var(--color-primary);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            border-radius: 50px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            line-height: 1.25;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .highlight-text {
+            color: var(--color-primary);
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: var(--color-text-muted);
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mouse {
+            width: 24px;
+            height: 40px;
+            border: 2px solid var(--color-secondary);
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .wheel {
+            width: 4px;
+            height: 8px;
+            background-color: var(--color-primary);
+            border-radius: 2px;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scroll-wheel 1.5s infinite;
+        }
+
+        .scroll-text {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        @keyframes scroll-wheel {
+            0% { top: 8px; opacity: 1; }
+            50% { top: 16px; opacity: 0.3; }
+            100% { top: 8px; opacity: 1; }
+        }
+
+        /* Profile / About Section */
+        .about-image-wrapper {
+            position: relative;
+            padding-bottom: 3rem;
+        }
+
+        .image-border-decoration {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 100%;
+            height: calc(100% - 2rem);
+            border: 2px solid var(--color-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .about-image {
+            width: 100%;
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            z-index: 1;
+            position: relative;
+        }
+
+        .profile-meta-card {
+            position: absolute;
+            bottom: 0;
+            right: -2rem;
+            width: calc(100% - 4rem);
+            z-index: 2;
+            padding: 1.5rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        .profile-meta-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-meta-card .en-name {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        .role-badge {
+            font-size: 0.85rem;
+            color: var(--color-primary);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .meta-list {
+            list-style: none;
+        }
+
+        .meta-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-list li i {
+            width: 16px;
+            height: 16px;
+            color: var(--color-primary);
+        }
+
+        .quote-box {
+            margin-top: 2rem;
+            border-left: 3px solid var(--color-primary);
+            padding-left: 1.5rem;
+        }
+
+        .quote-text {
+            font-style: italic;
+            color: var(--color-secondary);
+            font-weight: 500;
+        }
+
+        /* Card Pillars Section */
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(208, 91, 67, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary);
+            transition: var(--transition-smooth);
+        }
+
+        .card-icon i {
+            width: 28px;
+            height: 28px;
+        }
+
+        .card:hover .card-icon {
+            background-color: var(--color-primary);
+            color: var(--color-text-light);
+            transform: rotateY(180deg);
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-text {
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Media Cards */
+        .media-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .media-tag {
+            display: inline-block;
+            align-self: flex-start;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 4px;
+            background-color: rgba(93, 156, 236, 0.1);
+            color: var(--color-accent);
+            margin-bottom: 1.5rem;
+        }
+
+        .tag-featured {
+            background-color: rgba(208, 91, 67, 0.1);
+            color: var(--color-primary);
+        }
+
+        .featured-card {
+            border: 2px solid rgba(208, 91, 67, 0.25);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(254, 251, 247, 0.85) 100%);
+        }
+
+        .media-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .media-card p {
+            color: var(--color-text-muted);
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+
+        .card-link:hover {
+            color: var(--color-primary-hover);
+            gap: 0.75rem;
+        }
+
+        .newsletter-signup-box {
+            margin-bottom: 1.5rem;
+        }
+
+        .subscribe-form {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .subscribe-input {
+            flex-grow: 1;
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--border-radius-md);
+            border: 1px solid rgba(42, 67, 92, 0.15);
+            background: rgba(255, 255, 255, 0.8);
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .subscribe-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .form-success-msg {
+            color: #27AE60;
+            font-size: 0.9rem;
+            margin-top: 0.75rem;
+            font-weight: 500;
+        }
+
+        .gift-banner {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            background-color: rgba(208, 91, 67, 0.04);
+            border: 1px dashed rgba(208, 91, 67, 0.2);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .gift-icon {
+            color: var(--color-primary);
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Contact Form Section */
+        .contact-info {
+            padding-right: 2rem;
+        }
+
+        .contact-details {
+            margin-top: 3rem;
+        }
+
+        .contact-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .icon-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: rgba(42, 67, 92, 0.05);
+            color: var(--color-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contact-item h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-item p {
+            color: var(--color-text-muted);
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--color-secondary);
+        }
+
+        .form-control {
+            padding: 0.8rem 1rem;
+            border-radius: var(--border-radius-md);
+            border: 1px solid rgba(42, 67, 92, 0.15);
+            background: rgba(255, 255, 255, 0.6);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            background: #FFFFFF;
+        }
+
+        .contact-success-msg {
+            color: #27AE60;
+            font-weight: 500;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--color-bg-dark);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4rem 0;
+        }
+
+        .footer-logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 1rem;
+        }
+
+        .footer-copy {
+            font-size: 0.85rem;
+        }
+
+        /* Scroll Animation Base Elements */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInAnimation 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .fade-in:nth-child(1) { animation-delay: 0.1s; }
+        .fade-in:nth-child(2) { animation-delay: 0.3s; }
+        .fade-in:nth-child(3) { animation-delay: 0.5s; }
+        .fade-in:nth-child(4) { animation-delay: 0.7s; }
+
+        @keyframes fadeInAnimation {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+        /* Pillar Detail Sections */
+        .pillar-card-link {
+            display: block;
+            height: 100%;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .pillar-card-link:focus-visible {
+            outline: 3px solid rgba(208, 91, 67, 0.45);
+            outline-offset: 6px;
+            border-radius: var(--border-radius-lg);
+        }
+
+        .pillar-card-link .card {
+            height: 100%;
+        }
+
+        .pillar-card-link .card::after {
+            content: "詳しく見る";
+            display: inline-flex;
+            margin-top: 1.5rem;
+            color: var(--color-primary);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .pillar-details {
+            margin-top: 5rem;
+            text-align: left;
+            display: grid;
+            gap: 3rem;
+        }
+
+        .pillar-detail {
+            display: grid;
+            grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.6fr);
+            gap: 3rem;
+            align-items: start;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(42, 67, 92, 0.12);
+            scroll-margin-top: 110px;
+        }
+
+        .pillar-detail-kicker {
+            font-family: var(--font-display);
+            color: var(--color-primary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .pillar-detail h3 {
+            font-size: clamp(1.5rem, 2.4vw, 2rem);
+            color: var(--color-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .pillar-detail-body {
+            display: grid;
+            gap: 1.35rem;
+        }
+
+        .pillar-detail-body p {
+            color: var(--color-text);
+            line-height: 1.9;
+        }
+
+        .pillar-detail-list {
+            list-style: none;
+            display: grid;
+            gap: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        .pillar-detail-list li {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            line-height: 1.7;
+        }
+
+        .pillar-detail-list i {
+            width: 18px;
+            height: 18px;
+            color: var(--color-primary);
+            margin-top: 0.22rem;
+            flex: 0 0 auto;
+        }
+
+        /* Responsive CSS */
+        @media (max-width: 1024px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 3.5rem;
+            }
+            
+            .about-image-wrapper {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .profile-meta-card {
+                right: -1rem;
+            }
+            
+            .grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 15px;
+            }
+            
+            .section {
+                padding: 5rem 0;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero-actions .btn {
+                width: 100%;
+            }
+            
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+
+            .pillar-detail {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .profile-meta-card {
+                position: static;
+                width: 100%;
+                margin-top: 1rem;
+                right: auto;
+            }
+            
+            .subscribe-form {
+                flex-direction: column;
+            }
+            
+            .btn {
+                padding: 0.8rem 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="glass-header">
+        <div class="header-container">
+            <a href="#" class="logo">
+                <span class="logo-accent">首里</span>編集スタジオ
+            </a>
+            <nav class="nav-links">
+                <a href="#about">About</a>
+                <a href="#update-log">Update</a>
+                <a href="#pillars">Activities</a>
+                <a href="#books">Books</a>
+                <a href="#media">Media</a>
+                <a href="#contact" class="btn btn-primary-outline">お問い合わせ</a>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="メニューを開く">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="hero-section">
+            <div class="hero-overlay"></div>
+            <div class="hero-content container">
+                <span class="hero-badge fade-in">Update Your Life</span>
+                <h1 class="hero-title fade-in">
+                    沖縄・首里から届ける<br>
+                    <span class="highlight-text">テニス × AI × 人生再設計</span>
+                </h1>
+                <p class="hero-description fade-in">
+                    「もう遅い」を超えていく。<br>
+                    心臓手術からの復帰経験をもとに、50代以降の“人生更新”を支援しています。<br><br>
+                    テニス指導、AI活用、情報発信を通じて、
+                    身体・知性・心のリズムを整える伴走をしています。
+                </p>
+                <div class="hero-actions fade-in">
+                    <a href="#media" class="btn btn-primary">無料ニュースレターで「人生更新のヒント」を受け取る</a>
+                    <a href="#contact" class="btn btn-secondary">初回無料で相談する</a>
+                </div>
+            </div>
+            <div class="scroll-indicator">
+                <span class="mouse">
+                    <span class="wheel"></span>
+                </span>
+                <span class="scroll-text">Scroll Down</span>
+            </div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="about" class="section about-section">
+            <div class="container grid-2">
+                <div class="about-image-wrapper reveal">
+                    <div class="image-border-decoration"></div>
+                    <img src="assets/profile_generated_cap.png" alt="城間修のポートレート" class="about-image">
+                    <div class="profile-meta-card glass-card">
+                        <h3>城間 修 <span class="en-name">Osamu Shiroma</span></h3>
+                        <p class="role-badge">Prince契約コーチ / 執筆者</p>
+                        <ul class="meta-list">
+                            <li><i data-lucide="award"></i> テニス指導歴30年以上</li>
+                            <li><i data-lucide="shield-check"></i> 日本スポーツ協会公認テニスコーチ2</li>
+                            <li><i data-lucide="heart-pulse"></i> 心臓手術から競技復帰</li>
+                            <li><i data-lucide="cpu"></i> AI活用・情報発信を毎日実践</li>
+                            <li><i data-lucide="map-pin"></i> 沖縄・首里在住</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="about-content reveal">
+                    <span class="section-subtitle">About Me</span>
+                    <h2 class="section-title">生涯現役の冒険者として</h2>
+                    <p class="paragraph">
+                        テニス指導歴は数十年に及び、長年現場で技術と理論を磨いてきました。審判資格を持ち、ルールの専門性を追求することで、ただの感覚論ではない「言語化されたテニス」を教えています。
+                    </p>
+                    <p class="paragraph">
+                        2022年、私は心臓の大手術を経験しました。一時はコートから遠ざかりましたが、その制約や故障を「新たなプレースタイル（脱力と効率）を深化させるための相棒」と捉え直し、復活を遂げました。この経験から、「年齢を理由に諦めない再スタート」の大切さを強く実感しています。
+                    </p>
+                    <p class="paragraph">
+                        現在は、テニスを「人生のリズムを整える技術」として次世代のジュニアやシニアへ伝えるとともに、AIという新しい道具をかつての「マイコン少年」のようなワクワク感で面白がりながら、日々のライフデザインや仕事の効率化に取り入れています。
+                    </p>
+                    <div class="quote-box">
+                        <p class="quote-text">「言葉にできた分だけ、前に進む。失敗や病気すらも、今の自分を作る大切な『編集素材』です。」</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Update Log Section -->
+        <section id="update-log" class="section bg-light">
+            <div class="container">
+                <div class="text-center">
+                    <span class="section-subtitle">Daily Update</span>
+                    <h2 class="section-title">最近の活動ログ</h2>
+                    <p class="section-description">
+                        テニス、AI、首里での暮らし。
+                        日々の小さな実践を積み重ねながら、人生更新のヒントを発信しています。
+                    </p>
+                </div>
+
+                <div class="grid-3 mt-4">
+                    <div class="glass-card reveal">
+                        <h3>AI実験ログ</h3>
+                        <p class="card-text">
+                            ChatGPTを使ったシニア向け情報整理術や、
+                            日常業務の小さな自動化を試しています。
+                        </p>
+                        <a href="https://note.com/oyajin42195" target="_blank" rel="noopener" class="card-link" style="margin-top:1.5rem; font-size:0.9rem;">
+                            Noteで確認する <i data-lucide="arrow-up-right" style="width:16px; height:16px;"></i>
+                        </a>
+                    </div>
+
+                    <div class="glass-card reveal">
+                        <h3>テニスメモ</h3>
+                        <p class="card-text">
+                            「脱力」と「効率」をテーマに、
+                            病後の身体操作を再設計しています。
+                        </p>
+                        <a href="https://note.com/tenikiti" target="_blank" rel="noopener" class="card-link" style="margin-top:1.5rem; font-size:0.9rem;">
+                            はいさいホールドノートで確認する <i data-lucide="arrow-up-right" style="width:16px; height:16px;"></i>
+                        </a>
+                    </div>
+
+                    <div class="glass-card reveal">
+                        <h3>首里の日常</h3>
+                        <p class="card-text">
+                            朝の散歩、読書、沖縄の静かな時間から、
+                            心と身体を整える気づきを発信しています。
+                        </p>
+                        <a href="https://substack.com/@jijjiokinawa" target="_blank" rel="noopener" class="card-link" style="margin-top:1.5rem; font-size:0.9rem;">
+                            Substackで確認する <i data-lucide="arrow-up-right" style="width:16px; height:16px;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activities (3 Pillars) Section -->
+        <section id="pillars" class="section">
+            <div class="container text-center">
+                <span class="section-subtitle">Activities</span>
+                <h2 class="section-title">活動の3つの柱</h2>
+                <p class="section-description">
+                    身体（テニス）、精神（執筆）、知性（AI）を循環させ、健やかに生きるためのアプローチ。
+                </p>
+                
+                <div class="grid-3 mt-4">
+                    <!-- Pillar 1 -->
+                    <a href="#pillar-tennis" class="pillar-card-link reveal">
+                        <div class="card glass-card">
+                            <div class="card-icon">
+                                <i data-lucide="dribbble"></i>
+                            </div>
+                            <h3>テニス指導（現場と理論）</h3>
+                            <p class="card-text">
+                                確かな指導ライセンスと審判資格に裏打ちされた理論をもとに、感覚を「操作説明書」のように言語化。ジュニアの育成からシニアの怪我をしない生涯テニスまで、戦術的な指導を行います。
+                            </p>
+                        </div>
+                    </a>
+
+                    <!-- Pillar 2 -->
+                    <a href="#pillar-writing" class="pillar-card-link reveal">
+                        <div class="card glass-card">
+                            <div class="card-icon">
+                                <i data-lucide="pen-tool"></i>
+                            </div>
+                            <h3>執筆・ライフデザイン</h3>
+                            <p class="card-text">
+                                Note「ジッジ沖縄」や週刊Substackニュースレターを通じて、シニア向けの生き方や再スタートのヒントを発信。人生の「編集者兼伴走者」として、読者の心のリズムを整えるエッセイを届けます。
+                            </p>
+                        </div>
+                    </a>
+
+                    <!-- Pillar 3 -->
+                    <a href="#pillar-ai" class="pillar-card-link reveal">
+                        <div class="card glass-card">
+                            <div class="card-icon">
+                                <i data-lucide="cpu"></i>
+                            </div>
+                            <h3>AI活用・スモールDX支援</h3>
+                            <p class="card-text">
+                                シニア世代や小規模事業者向けに、AIを使った文章作成、情報整理、日常業務の効率化を支援しています。「難しい技術」ではなく、日常で使える“相棒”として、AIを楽しく取り入れる方法を発信しています。
+                            </p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="pillar-details">
+                    <article id="pillar-tennis" class="pillar-detail reveal">
+                        <div>
+                            <p class="pillar-detail-kicker">Tennis Coaching</p>
+                            <h3>感覚を言葉にして、長く続けられるテニスへ</h3>
+                        </div>
+                        <div class="pillar-detail-body">
+                            <p>
+                                ジュニアからシニアまで、年齢や体力に合わせて「無理なく上達する道筋」を一緒に作ります。フォームだけを直すのではなく、試合中の判断、緊張した場面での呼吸、怪我を避ける身体の使い方まで、現場で使える言葉にして伝えます。
+                            </p>
+                            <ul class="pillar-detail-list">
+                                <li><i data-lucide="check-circle"></i><span>ジュニア育成、試合前の整理、親御さんへの方針共有</span></li>
+                                <li><i data-lucide="check-circle"></i><span>シニア世代の再スタート、怪我をしにくいプレースタイル作り</span></li>
+                                <li><i data-lucide="check-circle"></i><span>審判資格と競技経験を活かした、ルールと戦術の言語化</span></li>
+                            </ul>
+                        </div>
+                    </article>
+
+                    <article id="pillar-writing" class="pillar-detail reveal">
+                        <div>
+                            <p class="pillar-detail-kicker">Writing & Life Design</p>
+                            <h3>日々の記録を、人生を整える文章へ</h3>
+                        </div>
+                        <div class="pillar-detail-body">
+                            <p>
+                                病気、退職、再挑戦、首里での暮らし。日々の出来事をただの記録で終わらせず、読者が自分の人生を少し見直せる文章として届けています。Noteでは身近な実践を、Substackでは少し深い人生更新のエッセイを育てています。
+                            </p>
+                            <ul class="pillar-detail-list">
+                                <li><i data-lucide="check-circle"></i><span>60代からの再スタート、心と身体の整え方</span></li>
+                                <li><i data-lucide="check-circle"></i><span>Note、Kindle、Substackをつなぐ発信導線づくり</span></li>
+                                <li><i data-lucide="check-circle"></i><span>飾らず、盛らず、読後に少し前を向ける文章</span></li>
+                            </ul>
+                        </div>
+                    </article>
+
+                    <article id="pillar-ai" class="pillar-detail reveal">
+                        <div>
+                            <p class="pillar-detail-kicker">AI Partner</p>
+                            <h3>AIを、毎日の面倒を軽くする相棒に</h3>
+                        </div>
+                        <div class="pillar-detail-body">
+                            <p>
+                                AIを難しい専門技術としてではなく、日々の文章作成、情報整理、予定確認、発信準備を助けてくれる「暮らしの道具」として使っています。シニア世代や小さな事業者が、自分のペースでAIを取り入れられるよう、実体験をもとに支援します。
+                            </p>
+                            <ul class="pillar-detail-list">
+                                <li><i data-lucide="check-circle"></i><span>ChatGPTやAIツールを使った文章・メモ・企画整理</span></li>
+                                <li><i data-lucide="check-circle"></i><span>日々の面倒な作業を小さく分け、AIに任せる仕組み作り</span></li>
+                                <li><i data-lucide="check-circle"></i><span>怖さよりも面白さから始める、60代からのAI活用</span></li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kindle Books Section -->
+        <section id="books" class="section bg-light">
+            <div class="container">
+                <div class="text-center">
+                    <span class="section-subtitle">Books</span>
+                    <h2 class="section-title">著書紹介（Kindle電子書籍）</h2>
+                    <p class="section-description">
+                        テニス、AI、そして人生再設計。私のこれまでの実践と気づきを体系化した書籍です。
+                    </p>
+                </div>
+
+                <div class="grid-2 mt-4" style="max-width: 900px; margin: 3rem auto 0 auto;">
+                    <!-- Book 1 -->
+                    <div class="glass-card reveal" style="display: flex; flex-direction: column; height: 100%;">
+                        <div style="display: grid; grid-template-columns: 130px 1fr; gap: 1.5rem; align-items: start;">
+                            <!-- Cover Placeholder -->
+                            <img src="assets/book-cover-1.jpg" alt="Kindle書籍 表紙 1" class="book-cover" style="width: 130px; height: 173px; object-fit: cover; border-radius: var(--border-radius-md); box-shadow: 0 8px 20px rgba(42, 67, 92, 0.18);">
+<!-- Book Details -->
+                            <div>
+                                <span class="media-tag" style="background-color: rgba(208, 91, 67, 0.1); color: var(--color-primary); margin-bottom: 0.5rem; display: inline-block;">Kindle本 第1弾</span>
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-secondary);">はいさいホールドノート 初巻<br><span style="font-size: 0.85rem; font-weight: 500;">セカンドステージ　テニスで見つけた、生きぬくリズム</span></h3>
+                                <p style="font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+                                    テニス指導歴数十年の知見と、沖縄・首里での穏やかな日常の中で見つけた、人生後半を軽やかに生きるためのヒントを綴ったエッセイ集。
+                                </p>
+                                <a href="https://amzn.to/49xHMiT" target="_blank" rel="noopener" class="card-link" style="font-size: 0.9rem;">
+                                    Amazonで詳細を見る <i data-lucide="arrow-up-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Book 2 -->
+                    <div class="glass-card reveal" style="display: flex; flex-direction: column; height: 100%;">
+                        <div style="display: grid; grid-template-columns: 130px 1fr; gap: 1.5rem; align-items: start;">
+                            <!-- Cover Placeholder -->
+                            <img src="assets/book-cover-2.jpg" alt="Kindle書籍 表紙 2" class="book-cover" style="width: 130px; height: 173px; object-fit: cover; border-radius: var(--border-radius-md); box-shadow: 0 8px 20px rgba(42, 67, 92, 0.18);">
+<!-- Book Details -->
+                            <div>
+                                <span class="media-tag" style="background-color: rgba(93, 156, 236, 0.1); color: var(--color-accent); margin-bottom: 0.5rem; display: inline-block;">Kindle本 第2弾</span>
+                                <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--color-secondary);">「面倒くさい」をAIに渡したら、心に余白ができた。</h3>
+                                <p style="font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+                                    AIを「難しい最新技術」としてではなく、かつてのマイコン少年のように面白がりながら、日々の面倒な事務作業をAIに委任し、創造的な余白を作り出すための実践的ライフデザイン書。
+                                </p>
+                                <a href="https://amzn.to/3QU04V8" target="_blank" rel="noopener" class="card-link" style="font-size: 0.9rem;">
+                                    Amazonで詳細を見る <i data-lucide="arrow-up-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Media & Substack Section -->
+        <section id="media" class="section media-section">
+            <div class="container">
+                <div class="text-center">
+                    <span class="section-subtitle">Media & Newsletter</span>
+                    <h2 class="section-title">発信メディアとニュースレター</h2>
+                    <p class="section-description">
+                        日々の気づきを綴るNoteと、より深く繋がるための週刊ニュースレター。
+                    </p>
+                </div>
+
+                <div class="grid-2 mt-4">
+                    <!-- Note Card -->
+                    <div class="media-card glass-card reveal">
+                        <span class="media-tag">Note</span>
+                        <h3>ジッジ沖縄（note）</h3>
+                        <p>
+                            「シニア向けAI活用の日常」「首里での穏やかな生活」を、飾らない「ジッジスタイル」で公開しています。
+                        </p>
+                        <a href="https://note.com/oyajin42195" target="_blank" rel="noopener" class="card-link">
+                            Noteを読む <i data-lucide="arrow-up-right"></i>
+                        </a>
+                    </div>
+
+                    <!-- Substack Card -->
+                    <div class="media-card glass-card featured-card reveal">
+                        <span class="media-tag tag-featured">Substack</span>
+                        <h3>週刊ニュースレター「首里の朝霧」</h3>
+                        <p>
+                            毎週お届けする、伴走感のある「人生更新エッセイ」。シニア向けのAIライフでの失敗談、身体との付き合い方、心が震える「ぬちぐすい（命の薬）」の体験などを共有する母艦メディアです。
+                        </p>
+                        <div class="newsletter-signup-box">
+                            <a href="https://substack.com/@jijjiokinawa" target="_blank" rel="noopener" class="btn btn-primary btn-block">
+                                無料で読む → Substackで購読する
+                            </a>
+                            <p class="form-success-msg">Substackで無料登録すると、手書き風チェックリスト（Premium PDF）をお送りします。</p>
+                        </div>
+                        <div class="gift-banner">
+                            <i data-lucide="gift" class="gift-icon"></i>
+                            <p>
+                                <strong>【無料登録特典】</strong><br>
+                                「50代からのChatGPT入門」<br>
+                                「人生を更新する朝習慣チェックリスト」など、
+                                実践的なPDFをプレゼントしています。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="section contact-section">
+            <div class="container grid-2">
+                <div class="contact-info reveal">
+                    <span class="section-subtitle">Contact</span>
+                    <h2 class="section-title">お気軽にご相談ください</h2>
+                    <p class="paragraph">
+                        テニスの個別指導、<br>
+                        シニア向けAI活用、<br>
+                        執筆・発信相談など、<br>
+                        お気軽にご相談ください。<br><br>
+                        初回相談は無料です。<br>
+                        雑談レベルでも大丈夫です。
+                    </p>
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <div class="icon-circle"><i data-lucide="mail"></i></div>
+                            <div>
+                                <h4>Email</h4>
+                                <p><a href="mailto:os42.195@gmail.com">os42.195@gmail.com</a></p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="icon-circle"><i data-lucide="message-square"></i></div>
+                            <div>
+                                <h4>SNS</h4>
+                                <p><a href="https://x.com/jin_jr" target="_blank" rel="noopener">Twitter / X: @jin_jr</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-right-column">
+                    <div class="glass-card reveal" style="margin-bottom:2rem;">
+                        <h3 style="margin-bottom:1rem;">こんな相談が増えています</h3>
+                        <ul style="line-height:2; list-style:none; padding-left:0;">
+                            <li>・50代からAIをどう学べばいい？</li>
+                            <li>・テニスコーチからAIを導入して業務を効率化したい</li>
+                            <li>・現在の仕事を効率化したい</li>
+                            <li>・テニスを生涯スポーツとして楽しみたい</li>
+                        </ul>
+                    </div>
+                    <div class="contact-form-container glass-card reveal">
+                        <form id="contact-form" class="contact-form">
+                            <div class="form-group">
+                                <label for="name">お名前</label>
+                                <input type="text" id="name" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">メールアドレス</label>
+                                <input type="email" id="email" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="subject">件名</label>
+                                <select id="subject" class="form-control">
+                                    <option value="tennis">テニス指導のご相談</option>
+                                    <option value="writing">執筆・編集のご相談</option>
+                                    <option value="ai">AI活用・スモールDXのご相談</option>
+                                    <option value="other">その他のお問い合わせ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">メッセージ</label>
+                                <textarea id="message" rows="5" required class="form-control"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">送信する</button>
+                        </form>
+                        <p class="contact-success-msg hidden">お問い合わせを受け付けました。ご記入いただいたメールアドレス宛に、追って返信させていただきます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content text-center">
+            <p class="footer-logo">首里編集スタジオ</p>
+            <p class="footer-copy">© 2026 Osamu Shiroma. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Inline JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Initialize Lucide Icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            // 2. Sticky Header Effects
+            const header = document.querySelector('.glass-header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+
+            // 3. Scroll Reveal Animation (Intersection Observer)
+            const revealElements = document.querySelectorAll('.reveal');
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.15,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            revealElements.forEach(element => {
+                revealObserver.observe(element);
+            });
+
+            // 4. Substack CTA is a direct external link.
+
+            // 5. Contact Form Interaction
+            const contactForm = document.getElementById('contact-form');
+            const contactSuccessMsg = document.querySelector('.contact-success-msg');
+
+            if (contactForm) {
+                contactForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const subject = document.getElementById('subject').value;
+                    const message = document.getElementById('message').value;
+
+                    if (name && email && message) {
+                        contactForm.classList.add('hidden');
+                        contactSuccessMsg.classList.remove('hidden');
+                        console.log('Contact form submitted:', { name, email, subject, message });
+                    }
+                });
+            }
+
+            // 6. Mobile Navigation Menu Toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+
+            if (mobileMenuBtn && navLinks) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    const isVisible = navLinks.style.display === 'flex';
+                    if (isVisible) {
+                        navLinks.style.display = 'none';
+                    } else {
+                        navLinks.style.display = 'flex';
+                        navLinks.style.flexDirection = 'column';
+                        navLinks.style.position = 'absolute';
+                        navLinks.style.top = '100%';
+                        navLinks.style.left = '0';
+                        navLinks.style.width = '100%';
+                        navLinks.style.background = 'rgba(250, 248, 245, 0.95)';
+                        navLinks.style.padding = '2rem';
+                        navLinks.style.borderBottom = '1px solid rgba(42, 67, 92, 0.1)';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
