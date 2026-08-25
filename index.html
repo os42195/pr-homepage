@@ -1035,8 +1035,8 @@
                     テニス指導、AI活用、情報発信を通じて、身体・知性・心のリズムを整える伴走をしています。
                 </p>
                 <div class="hero-actions fade-in">
-                    <a href="#media" class="btn btn-primary">無料ニュースレターで「人生更新のヒント」を受け取る</a>
-                    <a href="#contact" class="btn btn-secondary">初回無料で相談する</a>
+                    <a href="https://substack.com/@jijjiokinawa" target="_blank" rel="noopener" class="btn btn-primary">Substackで無料購読する</a>
+                    <a href="mailto:os42.195@gmail.com" class="btn btn-secondary">メールで相談する</a>
                 </div>
             </div>
             <div class="scroll-indicator">
@@ -1332,16 +1332,7 @@
                             <a href="https://substack.com/@jijjiokinawa" target="_blank" rel="noopener" class="btn btn-primary btn-block">
                                 無料で読む → Substackで購読する
                             </a>
-                            <p class="form-success-msg">Substackで無料登録すると、手書き風チェックリスト（Premium PDF）をお送りします。</p>
-                        </div>
-                        <div class="gift-banner">
-                            <i data-lucide="gift" class="gift-icon"></i>
-                            <p>
-                                <strong>【無料登録特典】</strong><br>
-                                「50代からのChatGPT入門」<br>
-                                「人生を更新する朝習慣チェックリスト」など、
-                                実践的なPDFをプレゼントしています。
-                            </p>
+                            <p class="form-success-msg">Substackのページで、記事を読んだり無料で購読したりできます。</p>
                         </div>
                     </div>
                 </div>
@@ -1359,8 +1350,7 @@
                         シニア向けAI活用、<br>
                         執筆・発信相談など、<br>
                         お気軽にご相談ください。<br><br>
-                        初回相談は無料です。<br>
-                        雑談レベルでも大丈夫です。
+                        ご相談内容を簡単に添えて、メールまたはXのDMからご連絡ください。
                     </p>
                     <div class="contact-details">
                         <div class="contact-item">
@@ -1390,31 +1380,9 @@
                         </ul>
                     </div>
                     <div class="contact-form-container glass-card reveal">
-                        <form id="contact-form" class="contact-form">
-                            <div class="form-group">
-                                <label for="name">お名前</label>
-                                <input type="text" id="name" required class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="email">メールアドレス</label>
-                                <input type="email" id="email" required class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="subject">件名</label>
-                                <select id="subject" class="form-control">
-                                    <option value="tennis">テニス指導のご相談</option>
-                                    <option value="writing">執筆・編集のご相談</option>
-                                    <option value="ai">AI活用・スモールDXのご相談</option>
-                                    <option value="other">その他のお問い合わせ</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="message">メッセージ</label>
-                                <textarea id="message" rows="5" required class="form-control"></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block">送信する</button>
-                        </form>
-                        <p class="contact-success-msg hidden">お問い合わせを受け付けました。ご記入いただいたメールアドレス宛に、追って返信させていただきます。</p>
+                        <h3 style="margin-bottom:1rem;">メールでお問い合わせ</h3>
+                        <p class="paragraph">お問い合わせ内容をメールにご記入ください。確認後、返信します。</p>
+                        <a href="mailto:os42.195@gmail.com" class="btn btn-primary btn-block">メールを作成する</a>
                     </div>
                 </div>
             </div>
@@ -1467,27 +1435,7 @@
 
             // 4. Substack CTA is a direct external link.
 
-            // 5. Contact Form Interaction
-            const contactForm = document.getElementById('contact-form');
-            const contactSuccessMsg = document.querySelector('.contact-success-msg');
-
-            if (contactForm) {
-                contactForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const name = document.getElementById('name').value;
-                    const email = document.getElementById('email').value;
-                    const subject = document.getElementById('subject').value;
-                    const message = document.getElementById('message').value;
-
-                    if (name && email && message) {
-                        contactForm.classList.add('hidden');
-                        contactSuccessMsg.classList.remove('hidden');
-                        console.log('Contact form submitted:', { name, email, subject, message });
-                    }
-                });
-            }
-
-            // 6. Mobile Navigation Menu Toggle
+            // 5. Mobile Navigation Menu Toggle
             const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
             const navLinks = document.querySelector('.nav-links');
 
