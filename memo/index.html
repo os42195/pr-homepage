@@ -342,6 +342,7 @@
   var idleTimer = null, countTimer = null, countLeft = 0;
   var sending = false;
   var composing = false;   // 日本語入力の変換中
+  var lastSig = "", lastSentAt = 0;
   var items = [];   // 送信済み（このブラウザの控え）
 
   function store(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
@@ -428,11 +429,15 @@
     idleTimer = null; countTimer = null;
   }
 
+  function updateButton() {
+    $sendNow.disabled = sending || !$text.value.trim();
+  }
+
   function armIdle() {
     stopTimers();
-    if (composing) return;
-    if (!$text.value.trim()) { mark("idle", "まだ何も書いてない"); $sendNow.disabled = true; return; }
-    $sendNow.disabled = false;
+    updateButton();
+    if (!$text.value.trim()) { composing = false; mark("idle", "まだ何も書いてない"); return; }
+    if (composing) { mark("draft", "入力中"); return; }
     mark("draft", "下書きを預かってる");
     idleTimer = setTimeout(startCountdown, IDLE);
   }
@@ -449,10 +454,18 @@
   }
 
   function send() {
-    if (composing) { armIdle(); return; }
+    composing = false;
     var text = $text.value.replace(/\s+$/, "");
     if (!text.trim() || sending) return;
     stopTimers();
+
+    // 同じ文を続けて送らない（二重送信よけ）
+    var sig = ($date.value || todayStr()) + "\n" + text;
+    if (sig === lastSig && Date.now() - lastSentAt < 300000) {
+      mark("sent", "さっきと同じ文だから送らなかったよ");
+      updateButton();
+      return;
+    }
 
     var payload = {
       id: newId(),
@@ -465,25 +478,28 @@
 
     if (!configured()) { mark("error", "送り先が未設定"); checkReady(); return; }
 
-    sending = true; $sendNow.disabled = true;
+    sending = true; updateButton();
     mark("sending", "受信簿へ送ってる…");
 
     postIt(payload).then(function (res) {
-      sending = false;
+      sending = false; updateButton();
       if (res.ok) {
+        lastSig = payload.date + "\n" + payload.text;
+        lastSentAt = Date.now();
         record(payload, res.confirmed);
-        $text.value = ""; activeTag = "";
+        $text.value = ""; activeTag = ""; composing = false;
         Array.prototype.forEach.call($tags.children, function (el) { el.setAttribute("aria-pressed", "false"); });
         saveDraft();
         mark("sent", res.confirmed ? ("受信簿に入れたよ " + payload.time) : ("送ったよ " + payload.time + "（要確認）"));
         toast(res.confirmed ? "受信簿に追記したよ" : "送ったよ。念のため受信簿を見てね");
         say("");
         render();
+        updateButton();
         $text.focus();
       } else {
         mark("error", "送れなかった");
         say("受信簿へ送れなかった：" + res.error + "。文章はこのまま残してあるから、通信を確かめて「いま送る」を押してみて。", true);
-        $sendNow.disabled = false;
+        updateButton();
       }
     });
   }
@@ -531,13 +547,21 @@
     var max = Math.round(window.innerHeight * 0.6);
     $text.style.height = Math.min($text.scrollHeight + 2, max) + "px";
   }
-  $text.addEventListener("compositionstart", function () { composing = true; stopTimers(); mark("draft", "入力中"); });
+  var imeGuard = null;
+  function markComposing() {
+    composing = true;
+    clearTimeout(imeGuard);
+    // 変換終了の合図が来ないことがあるので、5秒で自動的に解除する
+    imeGuard = setTimeout(function () { composing = false; armIdle(); }, 5000);
+  }
+  $text.addEventListener("compositionstart", function () { markComposing(); stopTimers(); updateButton(); mark("draft", "入力中"); });
   $text.addEventListener("compositionend", function () {
-    composing = false; grow(); saveDraft(); armIdle();
+    clearTimeout(imeGuard); composing = false; grow(); saveDraft(); armIdle();
   });
   $text.addEventListener("input", function (e) {
-    grow(); saveDraft();
-    if (e && e.isComposing) { composing = true; stopTimers(); return; }
+    grow(); saveDraft(); updateButton();
+    if (e && e.isComposing) { markComposing(); stopTimers(); return; }
+    clearTimeout(imeGuard); composing = false;
     armIdle();
   });
   window.addEventListener("resize", grow);
