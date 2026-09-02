@@ -341,6 +341,7 @@
   var activeTag = "";
   var idleTimer = null, countTimer = null, countLeft = 0;
   var sending = false;
+  var composing = false;   // 日本語入力の変換中
   var items = [];   // 送信済み（このブラウザの控え）
 
   function store(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
@@ -429,6 +430,7 @@
 
   function armIdle() {
     stopTimers();
+    if (composing) return;
     if (!$text.value.trim()) { mark("idle", "まだ何も書いてない"); $sendNow.disabled = true; return; }
     $sendNow.disabled = false;
     mark("draft", "下書きを預かってる");
@@ -436,7 +438,7 @@
   }
 
   function startCountdown() {
-    if (!$text.value.trim()) return;
+    if (composing || !$text.value.trim()) return;
     countLeft = COUNT;
     mark("count", countLeft + "秒後に受信簿へ送るよ");
     countTimer = setInterval(function () {
@@ -447,6 +449,7 @@
   }
 
   function send() {
+    if (composing) { armIdle(); return; }
     var text = $text.value.replace(/\s+$/, "");
     if (!text.trim() || sending) return;
     stopTimers();
@@ -528,14 +531,26 @@
     var max = Math.round(window.innerHeight * 0.6);
     $text.style.height = Math.min($text.scrollHeight + 2, max) + "px";
   }
-  $text.addEventListener("input", function () { grow(); saveDraft(); armIdle(); });
+  $text.addEventListener("compositionstart", function () { composing = true; stopTimers(); mark("draft", "入力中"); });
+  $text.addEventListener("compositionend", function () {
+    composing = false; grow(); saveDraft(); armIdle();
+  });
+  $text.addEventListener("input", function (e) {
+    grow(); saveDraft();
+    if (e && e.isComposing) { composing = true; stopTimers(); return; }
+    armIdle();
+  });
   window.addEventListener("resize", grow);
   $date.addEventListener("change", saveDraft);
   $sendNow.addEventListener("click", send);
   $text.addEventListener("keydown", function (e) {
+    if (e.isComposing || e.keyCode === 229) return;
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); send(); }
   });
-  $text.addEventListener("blur", function () { if ($text.value.trim()) startCountdown(); });
+  $text.addEventListener("blur", function () {
+    if (composing) return;
+    if ($text.value.trim()) startCountdown();
+  });
 
   // ---- 一覧（このブラウザの控え）----
   function render() {
