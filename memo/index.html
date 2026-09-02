@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>受信簿ポスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --paper:      #f4f4f1;
+    --surface:    #ffffff;
+    --surface-2:  #eceded;
+    --line:       #d8dad9;
+    --line-soft:  #e6e7e6;
+    --ink:        #1b2229;
+    --ink-2:      #4d5760;
+    --ink-3:      #7d868e;
+    --ai:         #27496b;
+    --ai-soft:    #e3eaf1;
+    --ai-ink:     #1d3a54;
+    --ok:         #3f7a52;
+    --danger:     #9b3b32;
+    --shadow:     0 1px 2px rgba(27,34,41,.06), 0 8px 24px rgba(27,34,41,.05);
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic Medium", system-ui, sans-serif;
+    --serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #14181d; --surface: #1b2027; --surface-2: #232a32;
+      --line: #2f3843; --line-soft: #262e37;
+      --ink: #e7eaed; --ink-2: #a9b3bd; --ink-3: #78838e;
+      --ai: #8ab6d8; --ai-soft: #22323f; --ai-ink: #bcd6ea;
+      --ok: #7fb894; --danger: #d98a80;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #14181d; --surface: #1b2027; --surface-2: #232a32;
+    --line: #2f3843; --line-soft: #262e37;
+    --ink: #e7eaed; --ink-2: #a9b3bd; --ink-3: #78838e;
+    --ai: #8ab6d8; --ai-soft: #22323f; --ai-ink: #bcd6ea;
+    --ok: #7fb894; --danger: #d98a80;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-text-size-adjust: 100%;
+  }
+  img { max-width: 100%; }
+  .wrap {
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 24px 18px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  header { display: flex; flex-direction: column; gap: 4px; }
+  h1 {
+    font-family: var(--serif);
+    font-size: 25px; font-weight: 600;
+    letter-spacing: .06em; margin: 0;
+    text-wrap: balance;
+  }
+  .sub { color: var(--ink-3); font-size: 13px; line-height: 1.6; }
+  .sub a { color: var(--ai); }
+
+  .composer {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 13px;
+  }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  input[type="date"], input[type="url"], input[type="password"] {
+    font: 500 15px/1.4 var(--mono);
+    color: var(--ink);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 7px 10px;
+    accent-color: var(--ai);
+  }
+  input[type="url"], input[type="password"] { width: 100%; font-size: 13px; }
+  .today-btn {
+    font: 500 12px/1 var(--mono); letter-spacing: .04em;
+    color: var(--ai); background: none;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 11px; cursor: pointer;
+  }
+  .today-btn:hover { background: var(--ai-soft); }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-family: var(--sans); font-size: 13px;
+    color: var(--ink-2); background: var(--surface-2);
+    border: 1px solid transparent; border-radius: 999px;
+    padding: 5px 11px; cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .tag:hover { border-color: var(--line); }
+  .tag[aria-pressed="true"] {
+    background: var(--ai-soft); border-color: var(--ai); color: var(--ai-ink);
+  }
+
+  textarea {
+    font-family: var(--sans); font-size: 16px; line-height: 1.8;
+    color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 12px; min-height: 240px;
+    resize: vertical; width: 100%;
+  }
+  textarea::placeholder { color: var(--ink-3); }
+  textarea:focus-visible, input:focus-visible, button:focus-visible {
+    outline: 2px solid var(--ai); outline-offset: 2px;
+  }
+
+  .send-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .save-state {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .03em;
+    color: var(--ink-3); display: flex; align-items: center; gap: 6px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); flex: none; }
+  .save-state[data-state="sent"] { color: var(--ok); }
+  .save-state[data-state="sent"] .dot { background: var(--ok); }
+  .save-state[data-state="sending"] .dot,
+  .save-state[data-state="count"] .dot { background: var(--ai); }
+  .save-state[data-state="count"] { color: var(--ai); }
+  .save-state[data-state="error"] { color: var(--danger); }
+  .save-state[data-state="error"] .dot { background: var(--danger); }
+
+  .sendnow {
+    font-family: var(--sans); font-size: 14px; font-weight: 600;
+    color: #fff; background: var(--ai);
+    border: none; border-radius: 8px;
+    padding: 9px 18px; cursor: pointer;
+  }
+  :root[data-theme="dark"] .sendnow { color: #101820; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sendnow { color: #101820; } }
+  .sendnow:disabled { opacity: .4; cursor: default; }
+
+  .notice {
+    font-size: 13.5px; line-height: 1.7; color: var(--ink-2);
+    background: var(--surface-2);
+    border-left: 3px solid var(--ai);
+    border-radius: 0 6px 6px 0; padding: 10px 13px;
+  }
+  .notice.bad { border-left-color: var(--danger); }
+
+  details.settings {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0 14px;
+  }
+  details.settings > summary {
+    cursor: pointer; padding: 11px 0;
+    font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .settings-body { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 16px; }
+  .settings-body label { font-size: 12.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
+  .settings-note { font-size: 12px; color: var(--ink-3); line-height: 1.65; }
+
+  .log { display: flex; flex-direction: column; gap: 26px; }
+  .day { display: flex; flex-direction: column; gap: 8px; }
+  .day-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 5px;
+  }
+  .day-date {
+    font-family: var(--mono); font-size: 14px; font-weight: 500;
+    letter-spacing: .03em; font-variant-numeric: tabular-nums;
+  }
+  .day-date .dow { color: var(--ink-3); margin-left: 6px; font-size: 12.5px; }
+  .day-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-3); display: flex; gap: 10px; align-items: baseline; }
+  .copy {
+    font: 500 11px/1 var(--mono); color: var(--ink-3);
+    background: none; border: none; padding: 3px 0;
+    cursor: pointer; letter-spacing: .04em;
+  }
+  .copy:hover { color: var(--ai); }
+
+  .item {
+    display: grid; grid-template-columns: 46px 1fr;
+    gap: 10px; align-items: start;
+    padding: 7px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .item:last-child { border-bottom: none; }
+  .item-time {
+    font-family: var(--mono); font-size: 12px; color: var(--ink-3);
+    font-variant-numeric: tabular-nums; padding-top: 4px;
+  }
+  .item-body { min-width: 0; }
+  .item-tag { font-size: 13px; color: var(--ai-ink); margin-right: 6px; }
+  .item-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
+  .item.pending { opacity: .75; }
+  .badge {
+    font: 500 10px/1 var(--mono); letter-spacing: .06em;
+    color: var(--danger); border: 1px solid var(--danger);
+    border-radius: 999px; padding: 3px 6px; margin-left: 6px; white-space: nowrap;
+  }
+
+  .empty { color: var(--ink-3); font-size: 14px; padding: 6px 0; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 22px;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--ink); color: var(--paper);
+    font-size: 13.5px; padding: 9px 18px; border-radius: 999px;
+    box-shadow: var(--shadow); opacity: 0; pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .toast, .tag { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>受信簿ポスト</h1>
+    <div class="sub">
+      書いて手を止めると、受信簿のGoogleドキュメントへ日付ごとに追記される。
+      <a href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
+    </div>
+  </header>
+
+  <div id="status" class="notice" hidden></div>
+
+  <section class="composer">
+    <div class="row">
+      <span class="eyebrow">日付</span>
+      <input type="date" id="date">
+      <button class="today-btn" id="todayBtn" type="button">今日にもどす</button>
+    </div>
+
+    <div class="tags" id="tags" role="group" aria-label="タグ"></div>
+
+    <textarea id="text" placeholder="ここに書く。手を止めて10秒たつと、そのまま受信簿へ送るよ。"></textarea>
+
+    <div class="send-row">
+      <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
+        <span class="dot"></span><span id="saveLabel">まだ何も書いてない</span>
+      </span>
+      <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
+    </div>
+  </section>
+
+  <details class="settings" id="settings">
+    <summary>送り先の設定</summary>
+    <div class="settings-body">
+      <label>受け皿のURL（…/exec）
+        <input type="url" id="endpoint" placeholder="https://script.google.com/macros/s/……/exec" autocomplete="off">
+      </label>
+      <label>合言葉
+        <input type="password" id="secret" placeholder="Apps Scriptに書いた言葉" autocomplete="off">
+      </label>
+      <div class="settings-note">
+        このブラウザの中だけに保存される。ほかの人にも、AIにも渡らない。
+        スマホでも使うときは、スマホ側で同じものを1回入れてね。
+      </div>
+    </div>
+  </details>
+
+  <div class="log" id="log">
+    <div class="empty">まだ1件もないよ。上に書くだけで、ここと受信簿の両方に残る。</div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var TAGS = [
+    { key: "tennis", label: "🎾 テニス / 指導" },
+    { key: "idea",   label: "💡 アイデア" },
+    { key: "feel",   label: "💭 感情パーキング" },
+    { key: "todo",   label: "📌 Todo / 連絡" },
+    { key: "health", label: "🏥 体調 / 健康" },
+    { key: "want",   label: "🌟 やりたいこと" }
+  ];
+  var DOW = ["日","月","火","水","木","金","土"];
+  var IDLE = 10000;   // 手が止まってから送るまで
+  var COUNT = 4;      // 送る直前のカウントダウン（秒）
+  var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log" };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var $date = $("date"), $tags = $("tags"), $text = $("text"), $log = $("log");
+  var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
+  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow");
+  var $endpoint = $("endpoint"), $secret = $("secret"), $settings = $("settings");
+
+  var activeTag = "";
+  var idleTimer = null, countTimer = null, countLeft = 0;
+  var sending = false;
+  var items = [];   // 送信済み（このブラウザの控え）
+
+  function store(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  function nowTime() { var d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function dowOf(s) { var p = String(s).split("-"); var d = new Date(+p[0], +p[1]-1, +p[2]); return isNaN(d.getTime()) ? "" : DOW[d.getDay()]; }
+  function labelOf(k) { for (var i=0;i<TAGS.length;i++) if (TAGS[i].key===k) return TAGS[i].label; return ""; }
+  function newId() { return (self.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2); }
+
+  function toast(m) {
+    $toast.textContent = m; $toast.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(function(){ $toast.classList.remove("show"); }, 2400);
+  }
+  function say(m, bad) {
+    if (!m) { $status.hidden = true; return; }
+    $status.textContent = m; $status.className = "notice" + (bad ? " bad" : ""); $status.hidden = false;
+  }
+  function mark(state, label) { $saveState.setAttribute("data-state", state); $saveLabel.textContent = label; }
+
+  // ---- 設定 ----
+  $endpoint.value = load(K.ep) || "";
+  $secret.value = load(K.sec) || "";
+  $endpoint.addEventListener("change", function(){ store(K.ep, $endpoint.value.trim()); checkReady(); });
+  $secret.addEventListener("change", function(){ store(K.sec, $secret.value); checkReady(); });
+
+  function configured() { return !!(($endpoint.value||"").trim() && ($secret.value||"")); }
+  function checkReady() {
+    if (!configured()) {
+      $settings.open = true;
+      say("送り先がまだ設定されてないよ。「送り先の設定」に、受け皿のURLと合言葉を入れてね。入れるまで、書いたものはこのブラウザに預かっておく。");
+    } else { say(""); }
+  }
+
+  // ---- タグ ----
+  TAGS.forEach(function (t) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "tag"; b.textContent = t.label;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () {
+      activeTag = (activeTag === t.key) ? "" : t.key;
+      Array.prototype.forEach.call($tags.children, function (el, i) {
+        el.setAttribute("aria-pressed", TAGS[i].key === activeTag ? "true" : "false");
+      });
+      saveDraft();
+    });
+    $tags.appendChild(b);
+  });
+
+  // ---- 下書きの復元 ----
+  $date.value = todayStr();
+  (function restore() {
+    var raw = load(K.draft);
+    if (!raw) return;
+    try {
+      var d = JSON.parse(raw);
+      if (d.text) $text.value = d.text;
+      if (d.date) $date.value = d.date;
+      if (d.tag) {
+        activeTag = d.tag;
+        Array.prototype.forEach.call($tags.children, function (el, i) {
+          el.setAttribute("aria-pressed", TAGS[i].key === activeTag ? "true" : "false");
+        });
+      }
+    } catch (e) {}
+  })();
+  (function restoreLog() {
+    var raw = load(K.log);
+    if (!raw) return;
+    try { items = JSON.parse(raw) || []; } catch (e) { items = []; }
+  })();
+
+  function saveDraft() {
+    store(K.draft, JSON.stringify({ text: $text.value, date: $date.value, tag: activeTag }));
+  }
+
+  $("todayBtn").addEventListener("click", function () { $date.value = todayStr(); saveDraft(); });
+
+  // ---- 送信 ----
+  function stopTimers() {
+    clearTimeout(idleTimer); clearInterval(countTimer);
+    idleTimer = null; countTimer = null;
+  }
+
+  function armIdle() {
+    stopTimers();
+    if (!$text.value.trim()) { mark("idle", "まだ何も書いてない"); $sendNow.disabled = true; return; }
+    $sendNow.disabled = false;
+    mark("draft", "下書きを預かってる");
+    idleTimer = setTimeout(startCountdown, IDLE);
+  }
+
+  function startCountdown() {
+    if (!$text.value.trim()) return;
+    countLeft = COUNT;
+    mark("count", countLeft + "秒後に受信簿へ送るよ");
+    countTimer = setInterval(function () {
+      countLeft--;
+      if (countLeft <= 0) { stopTimers(); send(); }
+      else mark("count", countLeft + "秒後に受信簿へ送るよ");
+    }, 1000);
+  }
+
+  function send() {
+    var text = $text.value.replace(/\s+$/, "");
+    if (!text.trim() || sending) return;
+    stopTimers();
+
+    var payload = {
+      id: newId(),
+      date: $date.value || todayStr(),
+      time: nowTime(),
+      tag: activeTag ? labelOf(activeTag) : "",
+      tagKey: activeTag,
+      text: text
+    };
+
+    if (!configured()) { mark("error", "送り先が未設定"); checkReady(); return; }
+
+    sending = true; $sendNow.disabled = true;
+    mark("sending", "受信簿へ送ってる…");
+
+    postIt(payload).then(function (res) {
+      sending = false;
+      if (res.ok) {
+        record(payload, res.confirmed);
+        $text.value = ""; activeTag = "";
+        Array.prototype.forEach.call($tags.children, function (el) { el.setAttribute("aria-pressed", "false"); });
+        saveDraft();
+        mark("sent", res.confirmed ? ("受信簿に入れたよ " + payload.time) : ("送ったよ " + payload.time + "（要確認）"));
+        toast(res.confirmed ? "受信簿に追記したよ" : "送ったよ。念のため受信簿を見てね");
+        say("");
+        render();
+        $text.focus();
+      } else {
+        mark("error", "送れなかった");
+        say("受信簿へ送れなかった：" + res.error + "。文章はこのまま残してあるから、通信を確かめて「いま送る」を押してみて。", true);
+        $sendNow.disabled = false;
+      }
+    });
+  }
+
+  // Apps Script は text/plain で送ると事前確認（プリフライト）が起きない
+  function postIt(payload) {
+    var url = $endpoint.value.trim();
+    var body = JSON.stringify({
+      secret: $secret.value,
+      date: payload.date, time: payload.time,
+      tag: payload.tag, text: payload.text
+    });
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: body,
+      redirect: "follow"
+    }).then(function (r) { return r.text(); })
+      .then(function (t) {
+        var j = null;
+        try { j = JSON.parse(t); } catch (e) {}
+        if (j && j.ok) return { ok: true, confirmed: true };
+        if (j && !j.ok) return { ok: false, error: j.error || "受け皿が断った" };
+        return { ok: false, error: "受け皿の返事が読めなかった" };
+      })
+      .catch(function () {
+        // 返事が読めない場合でも、届いてはいる可能性がある（no-cors で投げ直す）
+        return fetch(url, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: body })
+          .then(function () { return { ok: true, confirmed: false }; })
+          .catch(function (e) { return { ok: false, error: String(e && e.message || "通信できなかった") }; });
+      });
+  }
+
+  function record(payload, confirmed) {
+    items.unshift({
+      id: payload.id, date: payload.date, time: payload.time,
+      tagKey: payload.tagKey, text: payload.text, confirmed: !!confirmed
+    });
+    if (items.length > 300) items = items.slice(0, 300);
+    store(K.log, JSON.stringify(items));
+  }
+
+  $text.addEventListener("input", function () { saveDraft(); armIdle(); });
+  $date.addEventListener("change", saveDraft);
+  $sendNow.addEventListener("click", send);
+  $text.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); send(); }
+  });
+  $text.addEventListener("blur", function () { if ($text.value.trim()) startCountdown(); });
+
+  // ---- 一覧（このブラウザの控え）----
+  function render() {
+    $log.textContent = "";
+    if (!items.length) {
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "まだ1件もないよ。上に書くだけで、ここと受信簿の両方に残る。";
+      $log.appendChild(e);
+      return;
+    }
+    var byDate = {}, order = [];
+    items.forEach(function (it) {
+      if (!byDate[it.date]) { byDate[it.date] = []; order.push(it.date); }
+      byDate[it.date].push(it);
+    });
+    order.sort().reverse();
+
+    order.forEach(function (date) {
+      var list = byDate[date].slice().sort(function (a, b) { return a.time < b.time ? -1 : 1; });
+      var sec = document.createElement("section");
+      sec.className = "day";
+
+      var head = document.createElement("div");
+      head.className = "day-head";
+      var dt = document.createElement("div");
+      dt.className = "day-date";
+      dt.textContent = date;
+      var dw = document.createElement("span");
+      dw.className = "dow"; dw.textContent = "(" + dowOf(date) + ")";
+      dt.appendChild(dw);
+      var meta = document.createElement("div");
+      meta.className = "day-meta";
+      var cnt = document.createElement("span");
+      cnt.textContent = list.length + "件";
+      var cp = document.createElement("button");
+      cp.className = "copy"; cp.type = "button"; cp.textContent = "COPY";
+      cp.addEventListener("click", function () { copyDay(date, list); });
+      meta.appendChild(cnt); meta.appendChild(cp);
+      head.appendChild(dt); head.appendChild(meta);
+      sec.appendChild(head);
+
+      list.forEach(function (it) {
+        var row = document.createElement("div");
+        row.className = "item" + (it.confirmed ? "" : " pending");
+        var tm = document.createElement("div");
+        tm.className = "item-time"; tm.textContent = it.time || "";
+        var body = document.createElement("div");
+        body.className = "item-body";
+        if (it.tagKey) {
+          var tg = document.createElement("span");
+          tg.className = "item-tag"; tg.textContent = labelOf(it.tagKey);
+          body.appendChild(tg);
+        }
+        var tx = document.createElement("span");
+        tx.className = "item-text"; tx.textContent = it.text;
+        body.appendChild(tx);
+        if (!it.confirmed) {
+          var bd = document.createElement("span");
+          bd.className = "badge"; bd.textContent = "要確認";
+          body.appendChild(bd);
+        }
+        row.appendChild(tm); row.appendChild(body);
+        sec.appendChild(row);
+      });
+
+      $log.appendChild(sec);
+    });
+  }
+
+  function copyDay(date, list) {
+    var lines = ["## " + date + " (" + dowOf(date) + ")", ""];
+    list.forEach(function (it) {
+      lines.push("- " + (it.time ? it.time + " " : "") + (it.tagKey ? labelOf(it.tagKey) + " " : "") + it.text.replace(/\n/g, "\n  "));
+    });
+    var txt = lines.join("\n");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(
+        function () { toast("この日の分をコピーしたよ"); },
+        function () { toast("コピーできなかった"); }
+      );
+    } else { toast("コピーできなかった"); }
+  }
+
+  render();
+  checkReady();
+  armIdle();
+})();
+</script>
+</body>
+</html>
