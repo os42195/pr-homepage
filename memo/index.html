@@ -108,16 +108,25 @@
     font: 500 12px/1 var(--mono); letter-spacing: .04em;
     color: var(--ai); background: none;
     border: 1px solid var(--line); border-radius: 999px;
-    padding: 7px 11px; cursor: pointer;
+    padding: 0 13px; min-height: 40px; cursor: pointer;
+    display: inline-flex; align-items: center;
   }
+  input[type="date"] { min-height: 40px; }
   .today-btn:hover { background: var(--ai-soft); }
 
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags {
+    display: flex; gap: 6px;
+    overflow-x: auto; padding-bottom: 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .tags::-webkit-scrollbar { display: none; }
+  .tag { flex: none; }
   .tag {
     font-family: var(--sans); font-size: 13px;
     color: var(--ink-2); background: var(--surface-2);
     border: 1px solid transparent; border-radius: 999px;
-    padding: 5px 11px; cursor: pointer;
+    padding: 9px 13px; cursor: pointer; min-height: 40px;
+    display: inline-flex; align-items: center;
     transition: background .12s ease, color .12s ease;
   }
   .tag:hover { border-color: var(--line); }
@@ -129,7 +138,8 @@
     font-family: var(--sans); font-size: 16px; line-height: 1.8;
     color: var(--ink); background: var(--surface);
     border: 1px solid var(--line); border-radius: 8px;
-    padding: 11px 12px; min-height: 240px;
+    padding: 11px 12px;
+    min-height: 34vh; max-height: 60vh;
     resize: vertical; width: 100%;
   }
   textarea::placeholder { color: var(--ink-3); }
@@ -137,7 +147,15 @@
     outline: 2px solid var(--ai); outline-offset: 2px;
   }
 
-  .send-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .send-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    position: sticky; bottom: 0; z-index: 5;
+    margin: -6px -16px -16px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--line-soft);
+    border-radius: 0 0 10px 10px;
+  }
   .save-state {
     font-family: var(--mono); font-size: 11.5px; letter-spacing: .03em;
     color: var(--ink-3); display: flex; align-items: center; gap: 6px;
@@ -155,7 +173,7 @@
     font-family: var(--sans); font-size: 14px; font-weight: 600;
     color: #fff; background: var(--ai);
     border: none; border-radius: 8px;
-    padding: 9px 18px; cursor: pointer;
+    padding: 12px 20px; min-height: 44px; cursor: pointer;
   }
   :root[data-theme="dark"] .sendnow { color: #101820; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sendnow { color: #101820; } }
@@ -233,6 +251,15 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   @media (prefers-reduced-motion: reduce) { .toast, .tag { transition: none; } }
+
+  @media (max-width: 540px) {
+    .wrap { padding: 14px 12px 40px; gap: 14px; }
+    h1 { font-size: 20px; }
+    .sub { font-size: 12px; }
+    .composer { padding: 12px; gap: 10px; }
+    .send-row { margin: -4px -12px -12px; padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); }
+    textarea { min-height: 30vh; }
+  }
 </style>
 </head>
 <body>
@@ -257,7 +284,7 @@
 
     <div class="tags" id="tags" role="group" aria-label="タグ"></div>
 
-    <textarea id="text" placeholder="ここに書く。手を止めて10秒たつと、そのまま受信簿へ送るよ。"></textarea>
+    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。手を止めて30秒たつと、そのまま受信簿へ送るよ。"></textarea>
 
     <div class="send-row">
       <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
@@ -301,7 +328,7 @@
     { key: "want",   label: "🌟 やりたいこと" }
   ];
   var DOW = ["日","月","火","水","木","金","土"];
-  var IDLE = 10000;   // 手が止まってから送るまで
+  var IDLE = 30000;   // 手が止まってから送るまで
   var COUNT = 4;      // 送る直前のカウントダウン（秒）
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log" };
 
@@ -496,7 +523,13 @@
     store(K.log, JSON.stringify(items));
   }
 
-  $text.addEventListener("input", function () { saveDraft(); armIdle(); });
+  function grow() {
+    $text.style.height = "auto";
+    var max = Math.round(window.innerHeight * 0.6);
+    $text.style.height = Math.min($text.scrollHeight + 2, max) + "px";
+  }
+  $text.addEventListener("input", function () { grow(); saveDraft(); armIdle(); });
+  window.addEventListener("resize", grow);
   $date.addEventListener("change", saveDraft);
   $sendNow.addEventListener("click", send);
   $text.addEventListener("keydown", function (e) {
@@ -590,6 +623,7 @@
   render();
   checkReady();
   armIdle();
+  grow();
 })();
 </script>
 </body>
