@@ -82,7 +82,7 @@
   }
 
   header {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     border-bottom: 1px solid var(--gold);
     padding-bottom: 6px;
   }
@@ -219,11 +219,13 @@
     padding: 10px; margin: 0;
   }
 
-  .readback {
-    margin: 0; font-size: 13px; line-height: 1.8; color: var(--ink-3);
-    text-align: center;
+  .head-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .openlink {
+    font-size: 12.5px; font-weight: 600; color: var(--ai);
+    text-decoration: none; border-bottom: 1px solid var(--gold);
+    padding-bottom: 1px; white-space: nowrap;
   }
-  .readback a { color: var(--ai); font-weight: 600; }
+  .openlink:hover { color: var(--ai-ink); }
 
   .toast {
     position: fixed; left: 50%; bottom: 22px;
@@ -248,7 +250,10 @@
 <div class="wrap">
   <header>
     <h1>受信簿ポスト</h1>
-    <input type="date" id="date" aria-label="日付">
+    <div class="head-right">
+      <a class="openlink" href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
+      <input type="date" id="date" aria-label="日付">
+    </div>
   </header>
 
   <div id="status" class="notice" hidden></div>
@@ -266,11 +271,6 @@
   </section>
 
 
-  <p class="readback">
-    読み返しは
-    <a href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
-    から。
-  </p>
 
   <details class="settings" id="settings">
     <summary>送り先の設定</summary>
