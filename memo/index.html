@@ -162,6 +162,23 @@
     outline: 2px solid var(--ai); outline-offset: 2px;
   }
 
+  .tagnow {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--ai-soft);
+    border: 1px solid var(--ai);
+    border-radius: 8px;
+    padding: 8px 10px 8px 12px;
+    margin-top: -4px;
+  }
+  .tagnow-label { font-size: 13.5px; color: var(--ai-ink); }
+  .tagnow-clear {
+    font: 500 11px/1 var(--mono); letter-spacing: .06em;
+    color: var(--ai-ink); background: none;
+    border: 1px solid var(--ai); border-radius: 999px;
+    padding: 0 10px; min-height: 30px; cursor: pointer;
+  }
+  .tagnow-clear:hover { background: var(--surface); }
+
   .send-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     position: sticky; bottom: 0; z-index: 5;
@@ -266,6 +283,11 @@
 
     <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。手を止めて30秒たつと、そのまま受信簿へ送るよ。"></textarea>
 
+    <div class="tagnow" id="tagNow" hidden>
+      <span class="tagnow-label" id="tagNowLabel"></span>
+      <button class="tagnow-clear" id="tagNowClear" type="button" aria-label="タグを外す">外す</button>
+    </div>
+
     <div class="send-row">
       <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
         <span class="dot"></span><span id="saveLabel">まだ何も書いてない</span>
@@ -319,6 +341,7 @@
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow");
   var $endpoint = $("endpoint"), $secret = $("secret"), $settings = $("settings");
+  var $tagNow = $("tagNow"), $tagNowLabel = $("tagNowLabel"), $tagNowClear = $("tagNowClear");
 
   var activeTag = "";
   var idleTimer = null, countTimer = null, countLeft = 0;
@@ -346,6 +369,18 @@
   }
   function mark(state, label) { $saveState.setAttribute("data-state", state); $saveLabel.textContent = label; }
 
+  function paintTags() {
+    Array.prototype.forEach.call($tags.children, function (el, i) {
+      el.setAttribute("aria-pressed", TAGS[i].key === activeTag ? "true" : "false");
+    });
+    if (activeTag) {
+      $tagNowLabel.textContent = labelOf(activeTag) + " として送る";
+      $tagNow.hidden = false;
+    } else {
+      $tagNow.hidden = true;
+    }
+  }
+
   // ---- 設定 ----
   $endpoint.value = load(K.ep) || "";
   $secret.value = load(K.sec) || "";
@@ -368,9 +403,7 @@
     b.setAttribute("aria-pressed", "false");
     b.addEventListener("click", function () {
       activeTag = (activeTag === t.key) ? "" : t.key;
-      Array.prototype.forEach.call($tags.children, function (el, i) {
-        el.setAttribute("aria-pressed", TAGS[i].key === activeTag ? "true" : "false");
-      });
+      paintTags();
       saveDraft();
     });
     $tags.appendChild(b);
@@ -385,12 +418,7 @@
       var d = JSON.parse(raw);
       if (d.text) $text.value = d.text;
       if (d.date) $date.value = d.date;
-      if (d.tag) {
-        activeTag = d.tag;
-        Array.prototype.forEach.call($tags.children, function (el, i) {
-          el.setAttribute("aria-pressed", TAGS[i].key === activeTag ? "true" : "false");
-        });
-      }
+      if (d.tag) { activeTag = d.tag; }
     } catch (e) {}
   })();
 
@@ -466,7 +494,7 @@
         lastSig = payload.date + "\n" + payload.text;
         lastSentAt = Date.now();
         $text.value = ""; activeTag = ""; composing = false;
-        Array.prototype.forEach.call($tags.children, function (el) { el.setAttribute("aria-pressed", "false"); });
+        paintTags();
         saveDraft();
         mark("sent", res.confirmed ? ("受信簿に入れたよ " + payload.time) : ("送ったよ " + payload.time + "（要確認）"));
         toast(res.confirmed ? "受信簿に追記したよ" : "送ったよ。念のため受信簿を見てね");
@@ -545,6 +573,11 @@
     if ($text.value.trim()) startCountdown();
   });
 
+  $tagNowClear.addEventListener("click", function () {
+    activeTag = ""; paintTags(); saveDraft(); $text.focus();
+  });
+
+  paintTags();
   checkReady();
   armIdle();
   grow();
