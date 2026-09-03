@@ -176,6 +176,18 @@
   }
   .notice.bad { border-left-color: var(--danger); }
 
+  .unsent {
+    font-size: 13.5px; line-height: 1.6; font-weight: 600;
+    color: #fff; background: var(--ai);
+    border-radius: 8px; padding: 9px 12px;
+  }
+  :root[data-theme="dark"] .unsent { color: #1a100d; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .unsent { color: #1a100d; } }
+
+  .sendnow.urgent {
+    box-shadow: 0 0 0 3px var(--ai-soft);
+  }
+
   details.settings {
     background: var(--surface); border: 1px solid var(--line);
     border-radius: 10px; padding: 0 14px;
@@ -240,6 +252,7 @@
   </header>
 
   <div id="status" class="notice" hidden></div>
+  <div id="unsent" class="unsent" hidden>未送信の下書きがあるよ。「いま送る」で受信簿へ入る。</div>
 
   <section class="composer">
     <div class="send-row">
@@ -249,7 +262,7 @@
       <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
     </div>
 
-    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。手を止めて30秒で受信簿へ送るよ。"></textarea>
+    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。"></textarea>
   </section>
 
 
@@ -297,8 +310,6 @@ window.addEventListener("unhandledrejection", function (ev) {
 });
 (function () {
   var DOW = ["日","月","火","水","木","金","土"];
-  var IDLE_SEC = 30;   // 手が止まってから送るまで
-  var COUNT = 4;      // 送る直前のカウントダウン（秒）
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log" };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -306,8 +317,8 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow");
   var $endpoint = $("endpoint"), $settings = $("settings");
+  var $unsent = $("unsent");
 
-  var ticker = null, lastInput = 0;
   var sending = false;
   var composing = false;   // 日本語入力の変換中
   var lastSig = "", lastSentAt = 0;
@@ -377,10 +388,7 @@ window.addEventListener("unhandledrejection", function (ev) {
 
 
   // ---- 送信 ----
-  function stopTimers() {
-    clearInterval(ticker);
-    ticker = null;
-  }
+  function stopTimers() {}
 
   function updateButton() {
     $sendNow.disabled = sending || !$text.value.trim();
@@ -389,29 +397,15 @@ window.addEventListener("unhandledrejection", function (ev) {
   function armIdle() {
     stopTimers();
     updateButton();
-    if (!$text.value.trim()) { composing = false; mark("idle", "まだ何も書いてない"); return; }
+    var has = !!$text.value.trim();
+    $unsent.hidden = !has;
+    $sendNow.classList.toggle("urgent", has);
+    document.title = (has ? "● " : "") + "受信簿ポスト";
+    if (!has) { composing = false; mark("idle", "まだ何も書いてない"); return; }
     if (composing) { mark("draft", "入力中"); return; }
-    lastInput = Date.now();
-    mark("count", "あと " + IDLE_SEC + " 秒で送る");
-    ticker = setInterval(tick, 1000);
+    mark("draft", "未送信（押すと送る）");
   }
 
-  function tick() {
-    if (composing || sending) return;
-    if (!$text.value.trim()) { stopTimers(); armIdle(); return; }
-    var left = IDLE_SEC - Math.floor((Date.now() - lastInput) / 1000);
-    if (left <= 0) { stopTimers(); send(true); return; }
-    mark("count", "あと " + left + " 秒で送る");
-  }
-
-  function startCountdown() {
-    if (composing || !$text.value.trim()) return;
-    // 欄から離れたときは3秒後に送る
-    lastInput = Date.now() - (IDLE_SEC - 3) * 1000;
-    stopTimers();
-    ticker = setInterval(tick, 1000);
-    tick();
-  }
 
   function send(auto) {
     composing = false;
@@ -449,6 +443,9 @@ window.addEventListener("unhandledrejection", function (ev) {
         lastSentAt = Date.now();
         $text.value = ""; composing = false;
               saveDraft();
+        $unsent.hidden = true;
+        $sendNow.classList.remove("urgent");
+        document.title = "受信簿ポスト";
         mark("sent", res.confirmed ? ("受信簿に入れたよ " + payload.time) : ("送ったよ " + payload.time + "（要確認）"));
         toast(res.confirmed ? "受信簿に追記したよ" : "送ったよ。念のため受信簿を見てね");
         say("");
@@ -520,10 +517,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     if (e.isComposing || e.keyCode === 229) return;
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); send(false); }
   });
-  $text.addEventListener("blur", function () {
-    if (composing) return;
-    if ($text.value.trim()) startCountdown();
-  });
+  $text.addEventListener("blur", function () { saveDraft(); armIdle(); });
 
   var $diag = $("diag"), $diagOut = $("diagOut");
   $diag.addEventListener("click", function () {
