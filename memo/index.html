@@ -82,6 +82,7 @@
   }
 
   header {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
     border-bottom: 1px solid var(--gold);
     padding-bottom: 6px;
   }
@@ -103,7 +104,6 @@
     padding: 12px;
     display: flex; flex-direction: column; gap: 10px;
   }
-  .footrow { opacity: .85; }
   .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .eyebrow {
     font-family: var(--mono); font-size: 10.5px;
@@ -120,7 +120,7 @@
     accent-color: var(--ai);
   }
   input[type="url"], input[type="password"] { width: 100%; font-size: 13px; }
-  input[type="date"] { min-height: 40px; }
+  input[type="date"] { min-height: 36px; font-size: 13.5px; padding: 5px 8px; }
 
 
   textarea {
@@ -237,6 +237,7 @@
 <div class="wrap">
   <header>
     <h1>受信簿ポスト</h1>
+    <input type="date" id="date" aria-label="日付">
   </header>
 
   <div id="status" class="notice" hidden></div>
@@ -252,10 +253,6 @@
     </div>
   </section>
 
-  <div class="row footrow">
-    <span class="eyebrow">日付</span>
-    <input type="date" id="date">
-  </div>
 
   <details class="settings" id="settings">
     <summary>送り先の設定</summary>
