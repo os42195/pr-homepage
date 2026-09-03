@@ -368,8 +368,8 @@
   // ---- 設定 ----
   $endpoint.value = load(K.ep) || "";
   $secret.value = load(K.sec) || "";
-  $endpoint.addEventListener("change", function(){ store(K.ep, $endpoint.value.trim()); checkReady(); });
-  $secret.addEventListener("change", function(){ store(K.sec, $secret.value); checkReady(); });
+  $endpoint.addEventListener("change", function(){ store(K.ep, $endpoint.value.trim()); checkReady(); refresh(); });
+  $secret.addEventListener("change", function(){ store(K.sec, $secret.value); checkReady(); refresh(); });
 
   function configured() { return !!(($endpoint.value||"").trim() && ($secret.value||"")); }
   function checkReady() {
@@ -496,6 +496,7 @@
         render();
         updateButton();
         $text.focus();
+        refresh();
       } else {
         mark("error", "送れなかった");
         say("受信簿へ送れなかった：" + res.error + "。文章はこのまま残してあるから、通信を確かめて「いま送る」を押してみて。", true);
@@ -576,13 +577,111 @@
     if ($text.value.trim()) startCountdown();
   });
 
-  // ---- 一覧（このブラウザの控え）----
+  // ---- 一覧（受信簿そのものを読んで表示する）----
+  var docDays = null;   // 受信簿から読んだ中身
+  var loading = false;
+
+  function refresh() {
+    if (!configured() || loading) return;
+    loading = true;
+    postRead().then(function (res) {
+      loading = false;
+      if (res && res.ok) { docDays = res.days || []; }
+      render();
+    });
+  }
+
+  function postRead() {
+    var url = $endpoint.value.trim();
+    var body = JSON.stringify({ secret: $secret.value, action: "read", days: 7 });
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: body,
+      redirect: "follow"
+    }).then(function (r) { return r.text(); })
+      .then(function (t) { try { return JSON.parse(t); } catch (e) { return null; } })
+      .catch(function () { return null; });
+  }
+
   function render() {
     $log.textContent = "";
+    if (docDays) { renderDoc(); return; }
+    renderLocal();
+  }
+
+  function dayHeadEl(title, dow, count, onCopy) {
+    var head = document.createElement("div");
+    head.className = "day-head";
+    var dt = document.createElement("div");
+    dt.className = "day-date";
+    dt.textContent = title;
+    if (dow) {
+      var dw = document.createElement("span");
+      dw.className = "dow"; dw.textContent = "(" + dow + ")";
+      dt.appendChild(dw);
+    }
+    var meta = document.createElement("div");
+    meta.className = "day-meta";
+    if (count) { var c = document.createElement("span"); c.textContent = count; meta.appendChild(c); }
+    var cp = document.createElement("button");
+    cp.className = "copy"; cp.type = "button"; cp.textContent = "COPY";
+    cp.addEventListener("click", onCopy);
+    meta.appendChild(cp);
+    head.appendChild(dt); head.appendChild(meta);
+    return head;
+  }
+
+  function renderDoc() {
+    if (!docDays.length) {
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "受信簿にまだ何も無いみたい。上に書けば、ここにも受信簿にも入る。";
+      $log.appendChild(e);
+      return;
+    }
+    docDays.forEach(function (day) {
+      var m = String(day.heading || "").match(/^##\s*(\d{4}-\d{2}-\d{2})\s*(?:\((.)\))?/);
+      var date = m ? m[1] : String(day.heading || "").replace(/^##\s*/, "");
+      var dow = m ? (m[2] || dowOf(m[1])) : "";
+      var body = (day.lines || []);
+
+      var sec = document.createElement("section");
+      sec.className = "day";
+      sec.appendChild(dayHeadEl(date, dow, "", function () { copyLines(date, dow, body); }));
+
+      if (!body.length) {
+        var em = document.createElement("div");
+        em.className = "empty"; em.textContent = "（この日はまだ空）";
+        sec.appendChild(em);
+      }
+      body.forEach(function (line) {
+        var row = document.createElement("div");
+        row.className = "item";
+        var t = String(line);
+        var tm = document.createElement("div");
+        tm.className = "item-time";
+        var bd = document.createElement("div");
+        bd.className = "item-body";
+        var hit = t.match(/^\s*(\d{1,2}:\d{2})\s*(.*)$/);
+        if (hit) { tm.textContent = hit[1]; t = hit[2]; }
+        var tx = document.createElement("span");
+        tx.className = "item-text"; tx.textContent = t;
+        bd.appendChild(tx);
+        row.appendChild(tm); row.appendChild(bd);
+        sec.appendChild(row);
+      });
+      $log.appendChild(sec);
+    });
+  }
+
+  function renderLocal() {
     if (!items.length) {
       var e = document.createElement("div");
       e.className = "empty";
-      e.textContent = "まだ1件もないよ。上に書くだけで、ここと受信簿の両方に残る。";
+      e.textContent = configured()
+        ? "受信簿を読みにいけなかったから、このブラウザから送った分だけ出してる。"
+        : "まだ1件もないよ。送り先を設定すると、受信簿の中身がここに出る。";
       $log.appendChild(e);
       return;
     }
@@ -593,30 +692,16 @@
     });
     order.sort().reverse();
 
+    var note = document.createElement("div");
+    note.className = "empty";
+    note.textContent = "※ 受信簿を読めなかったので、このブラウザの控えを表示中";
+    $log.appendChild(note);
+
     order.forEach(function (date) {
       var list = byDate[date].slice().sort(function (a, b) { return a.time < b.time ? -1 : 1; });
       var sec = document.createElement("section");
       sec.className = "day";
-
-      var head = document.createElement("div");
-      head.className = "day-head";
-      var dt = document.createElement("div");
-      dt.className = "day-date";
-      dt.textContent = date;
-      var dw = document.createElement("span");
-      dw.className = "dow"; dw.textContent = "(" + dowOf(date) + ")";
-      dt.appendChild(dw);
-      var meta = document.createElement("div");
-      meta.className = "day-meta";
-      var cnt = document.createElement("span");
-      cnt.textContent = list.length + "件";
-      var cp = document.createElement("button");
-      cp.className = "copy"; cp.type = "button"; cp.textContent = "COPY";
-      cp.addEventListener("click", function () { copyDay(date, list); });
-      meta.appendChild(cnt); meta.appendChild(cp);
-      head.appendChild(dt); head.appendChild(meta);
-      sec.appendChild(head);
-
+      sec.appendChild(dayHeadEl(date, dowOf(date), list.length + "件", function () { copyDay(date, list); }));
       list.forEach(function (it) {
         var row = document.createElement("div");
         row.className = "item" + (it.confirmed ? "" : " pending");
@@ -632,25 +717,14 @@
         var tx = document.createElement("span");
         tx.className = "item-text"; tx.textContent = it.text;
         body.appendChild(tx);
-        if (!it.confirmed) {
-          var bd = document.createElement("span");
-          bd.className = "badge"; bd.textContent = "要確認";
-          body.appendChild(bd);
-        }
         row.appendChild(tm); row.appendChild(body);
         sec.appendChild(row);
       });
-
       $log.appendChild(sec);
     });
   }
 
-  function copyDay(date, list) {
-    var lines = ["## " + date + " (" + dowOf(date) + ")", ""];
-    list.forEach(function (it) {
-      lines.push("- " + (it.time ? it.time + " " : "") + (it.tagKey ? labelOf(it.tagKey) + " " : "") + it.text.replace(/\n/g, "\n  "));
-    });
-    var txt = lines.join("\n");
+  function toClipboard(txt) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(txt).then(
         function () { toast("この日の分をコピーしたよ"); },
@@ -659,10 +733,26 @@
     } else { toast("コピーできなかった"); }
   }
 
+  function copyLines(date, dow, lines) {
+    toClipboard(["## " + date + (dow ? " (" + dow + ")" : ""), ""].concat(lines).join("\n"));
+  }
+
+  function copyDay(date, list) {
+    var out = ["## " + date + " (" + dowOf(date) + ")", ""];
+    list.forEach(function (it) {
+      out.push("- " + (it.time ? it.time + " " : "") + (it.tagKey ? labelOf(it.tagKey) + " " : "") + it.text.replace(/\n/g, "\n  "));
+    });
+    toClipboard(out.join("\n"));
+  }
+
   render();
   checkReady();
   armIdle();
   grow();
+  refresh();
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") refresh();
+  });
 })();
 </script>
 </body>
