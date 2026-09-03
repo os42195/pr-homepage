@@ -322,6 +322,21 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+window.addEventListener("error", function (ev) {
+  var el = document.getElementById("status");
+  if (!el) return;
+  el.className = "notice bad";
+  el.hidden = false;
+  el.textContent = "ページの中で問題が起きた：" + (ev.message || "原因不明") +
+    "（" + String(ev.filename || "").split("/").pop() + " " + (ev.lineno || "?") + "行目）";
+});
+window.addEventListener("unhandledrejection", function (ev) {
+  var el = document.getElementById("status");
+  if (!el) return;
+  el.className = "notice bad";
+  el.hidden = false;
+  el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
+});
 (function () {
   var TAGS = [
     { key: "tennis", label: "🎾 テニス / 指導",   short: "🎾 テニス" },
@@ -488,6 +503,7 @@
 
     sending = true; updateButton();
     mark("sending", "受信簿へ送ってる…");
+    say("");
 
     postIt(payload).then(function (res) {
       sending = false; updateButton();
@@ -504,7 +520,7 @@
         $text.focus();
       } else {
         mark("error", "送れなかった");
-        say("受信簿へ送れなかった：" + res.error + "。文章はこのまま残してあるから、通信を確かめて「いま送る」を押してみて。", true);
+        say("受信簿へ送れなかった：" + (res && res.error || "理由不明") + "。文章はこのまま残してあるから、通信を確かめて「いま送る」を押してみて。", true);
         updateButton();
       }
     });
