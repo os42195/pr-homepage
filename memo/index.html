@@ -368,7 +368,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     { key: "want",   label: "🌟 やりたいこと",   short: "🌟 やりたい" }
   ];
   var DOW = ["日","月","火","水","木","金","土"];
-  var IDLE = 30000;   // 手が止まってから送るまで
+  var IDLE_SEC = 30;   // 手が止まってから送るまで
   var COUNT = 4;      // 送る直前のカウントダウン（秒）
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log" };
 
@@ -380,7 +380,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $tagNow = $("tagNow"), $tagNowLabel = $("tagNowLabel"), $tagNowClear = $("tagNowClear");
 
   var activeTag = "";
-  var idleTimer = null, countTimer = null, countLeft = 0;
+  var ticker = null, lastInput = 0;
   var sending = false;
   var composing = false;   // 日本語入力の変換中
   var lastSig = "", lastSentAt = 0;
@@ -480,8 +480,8 @@ window.addEventListener("unhandledrejection", function (ev) {
 
   // ---- 送信 ----
   function stopTimers() {
-    clearTimeout(idleTimer); clearInterval(countTimer);
-    idleTimer = null; countTimer = null;
+    clearInterval(ticker);
+    ticker = null;
   }
 
   function updateButton() {
@@ -493,19 +493,26 @@ window.addEventListener("unhandledrejection", function (ev) {
     updateButton();
     if (!$text.value.trim()) { composing = false; mark("idle", "まだ何も書いてない"); return; }
     if (composing) { mark("draft", "入力中"); return; }
-    mark("draft", "下書きを預かってる");
-    idleTimer = setTimeout(startCountdown, IDLE);
+    lastInput = Date.now();
+    mark("count", "あと " + IDLE_SEC + " 秒で送る");
+    ticker = setInterval(tick, 1000);
+  }
+
+  function tick() {
+    if (composing || sending) return;
+    if (!$text.value.trim()) { stopTimers(); armIdle(); return; }
+    var left = IDLE_SEC - Math.floor((Date.now() - lastInput) / 1000);
+    if (left <= 0) { stopTimers(); send(true); return; }
+    mark("count", "あと " + left + " 秒で送る");
   }
 
   function startCountdown() {
     if (composing || !$text.value.trim()) return;
-    countLeft = COUNT;
-    mark("count", countLeft + "秒後に受信簿へ送るよ");
-    countTimer = setInterval(function () {
-      countLeft--;
-      if (countLeft <= 0) { stopTimers(); send(true); }
-      else mark("count", countLeft + "秒後に受信簿へ送るよ");
-    }, 1000);
+    // 欄から離れたときは3秒後に送る
+    lastInput = Date.now() - (IDLE_SEC - 3) * 1000;
+    stopTimers();
+    ticker = setInterval(tick, 1000);
+    tick();
   }
 
   function send(auto) {
