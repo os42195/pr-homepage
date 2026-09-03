@@ -200,46 +200,11 @@
   .settings-body label { font-size: 12.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
   .settings-note { font-size: 12px; color: var(--ink-3); line-height: 1.65; }
 
-  .log { display: flex; flex-direction: column; gap: 26px; }
-  .day { display: flex; flex-direction: column; gap: 8px; }
-  .day-head {
-    display: flex; align-items: baseline; justify-content: space-between;
-    gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 5px;
+  .readback {
+    margin: 0; font-size: 13px; line-height: 1.8; color: var(--ink-3);
+    text-align: center;
   }
-  .day-date {
-    font-family: var(--mono); font-size: 14px; font-weight: 500;
-    letter-spacing: .03em; font-variant-numeric: tabular-nums;
-  }
-  .day-date .dow { color: var(--ink-3); margin-left: 6px; font-size: 12.5px; }
-  .day-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-3); display: flex; gap: 10px; align-items: baseline; }
-  .copy {
-    font: 500 11px/1 var(--mono); color: var(--ink-3);
-    background: none; border: none; padding: 3px 0;
-    cursor: pointer; letter-spacing: .04em;
-  }
-  .copy:hover { color: var(--ai); }
-
-  .item {
-    display: grid; grid-template-columns: 46px 1fr;
-    gap: 10px; align-items: start;
-    padding: 7px 0; border-bottom: 1px solid var(--line-soft);
-  }
-  .item:last-child { border-bottom: none; }
-  .item-time {
-    font-family: var(--mono); font-size: 12px; color: var(--ink-3);
-    font-variant-numeric: tabular-nums; padding-top: 4px;
-  }
-  .item-body { min-width: 0; }
-  .item-tag { font-size: 13px; color: var(--ai-ink); margin-right: 6px; }
-  .item-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
-  .item.pending { opacity: .75; }
-  .badge {
-    font: 500 10px/1 var(--mono); letter-spacing: .06em;
-    color: var(--danger); border: 1px solid var(--danger);
-    border-radius: 999px; padding: 3px 6px; margin-left: 6px; white-space: nowrap;
-  }
-
-  .empty { color: var(--ink-3); font-size: 14px; padding: 6px 0; }
+  .readback a { color: var(--ai); font-weight: 600; }
 
   .toast {
     position: fixed; left: 50%; bottom: 22px;
@@ -269,7 +234,6 @@
     <h1>受信簿ポスト</h1>
     <div class="sub">
       書いて手を止めると、受信簿のGoogleドキュメントへ日付ごとに追記される。
-      <a href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
     </div>
   </header>
 
@@ -310,9 +274,11 @@
     </div>
   </details>
 
-  <div class="log" id="log">
-    <div class="empty">まだ1件もないよ。上に書くだけで、ここと受信簿の両方に残る。</div>
-  </div>
+  <p class="readback">
+    書いたものは受信簿のドキュメントに入るよ。読み返しは
+    <a href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
+    から。
+  </p>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -333,7 +299,7 @@
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log" };
 
   var $ = function (id) { return document.getElementById(id); };
-  var $date = $("date"), $tags = $("tags"), $text = $("text"), $log = $("log");
+  var $date = $("date"), $tags = $("tags"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow");
   var $endpoint = $("endpoint"), $secret = $("secret"), $settings = $("settings");
@@ -343,7 +309,6 @@
   var sending = false;
   var composing = false;   // 日本語入力の変換中
   var lastSig = "", lastSentAt = 0;
-  var items = [];   // 送信済み（このブラウザの控え）
 
   function store(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -368,8 +333,8 @@
   // ---- 設定 ----
   $endpoint.value = load(K.ep) || "";
   $secret.value = load(K.sec) || "";
-  $endpoint.addEventListener("change", function(){ store(K.ep, $endpoint.value.trim()); checkReady(); refresh(); });
-  $secret.addEventListener("change", function(){ store(K.sec, $secret.value); checkReady(); refresh(); });
+  $endpoint.addEventListener("change", function(){ store(K.ep, $endpoint.value.trim()); checkReady(); });
+  $secret.addEventListener("change", function(){ store(K.sec, $secret.value); checkReady(); });
 
   function configured() { return !!(($endpoint.value||"").trim() && ($secret.value||"")); }
   function checkReady() {
@@ -411,11 +376,8 @@
       }
     } catch (e) {}
   })();
-  (function restoreLog() {
-    var raw = load(K.log);
-    if (!raw) return;
-    try { items = JSON.parse(raw) || []; } catch (e) { items = []; }
-  })();
+
+  try { localStorage.removeItem(K.log); } catch (e) {}
 
   function saveDraft() {
     store(K.draft, JSON.stringify({ text: $text.value, date: $date.value, tag: activeTag }));
@@ -486,17 +448,14 @@
       if (res.ok) {
         lastSig = payload.date + "\n" + payload.text;
         lastSentAt = Date.now();
-        record(payload, res.confirmed);
         $text.value = ""; activeTag = ""; composing = false;
         Array.prototype.forEach.call($tags.children, function (el) { el.setAttribute("aria-pressed", "false"); });
         saveDraft();
         mark("sent", res.confirmed ? ("受信簿に入れたよ " + payload.time) : ("送ったよ " + payload.time + "（要確認）"));
         toast(res.confirmed ? "受信簿に追記したよ" : "送ったよ。念のため受信簿を見てね");
         say("");
-        render();
         updateButton();
         $text.focus();
-        refresh();
       } else {
         mark("error", "送れなかった");
         say("受信簿へ送れなかった：" + res.error + "。文章はこのまま残してあるから、通信を確かめて「いま送る」を押してみて。", true);
@@ -534,14 +493,6 @@
       });
   }
 
-  function record(payload, confirmed) {
-    items.unshift({
-      id: payload.id, date: payload.date, time: payload.time,
-      tagKey: payload.tagKey, text: payload.text, confirmed: !!confirmed
-    });
-    if (items.length > 300) items = items.slice(0, 300);
-    store(K.log, JSON.stringify(items));
-  }
 
   function grow() {
     $text.style.height = "auto";
@@ -577,200 +528,9 @@
     if ($text.value.trim()) startCountdown();
   });
 
-  // ---- 一覧（受信簿そのものを読んで表示する）----
-  var docDays = null;   // 受信簿から読んだ中身
-  var loading = false;
-  var readError = "";   // 読み取りに失敗した理由
-  var readTried = false;
-
-  function refresh() {
-    if (!configured()) {
-      readTried = true; readError = "送り先が未設定"; render(); return;
-    }
-    if (loading) return;
-    loading = true;
-    var timeout = new Promise(function (resolve) {
-      setTimeout(function () { resolve({ error: "受け皿が10秒以内に応えなかった" }); }, 10000);
-    });
-    Promise.race([postRead(), timeout]).then(function (res) {
-      loading = false; readTried = true;
-      if (res && res.ok && res.days) { docDays = res.days; readError = ""; }
-      else if (res && res.error) { readError = "受け皿の返事：" + res.error; }
-      else if (res && res.ok) { readError = "受け皿は答えたが、日付データが入っていない（Google側のコードが古い版のまま）"; }
-      else { readError = "受け皿の返事が読めない（通信がブロックされている）"; }
-      render();
-    });
-  }
-
-  function postRead() {
-    var url = $endpoint.value.trim();
-    var body = JSON.stringify({ secret: $secret.value, action: "read", days: 7 });
-    return fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: body,
-      redirect: "follow"
-    }).then(function (r) { return r.text(); })
-      .then(function (t) { try { return JSON.parse(t); } catch (e) { return { error: "返事が読めない形だった" }; } })
-      .catch(function (e) { return { error: "通信できなかった（" + (e && e.message || "原因不明") + "）" }; });
-  }
-
-  function render() {
-    $log.textContent = "";
-    if (docDays) { renderDoc(); return; }
-    if (!readTried) {
-      var w = document.createElement("div");
-      w.className = "empty";
-      w.textContent = "受信簿を読み込み中…";
-      $log.appendChild(w);
-      return;
-    }
-    renderLocal();
-  }
-
-  function dayHeadEl(title, dow, count, onCopy) {
-    var head = document.createElement("div");
-    head.className = "day-head";
-    var dt = document.createElement("div");
-    dt.className = "day-date";
-    dt.textContent = title;
-    if (dow) {
-      var dw = document.createElement("span");
-      dw.className = "dow"; dw.textContent = "(" + dow + ")";
-      dt.appendChild(dw);
-    }
-    var meta = document.createElement("div");
-    meta.className = "day-meta";
-    if (count) { var c = document.createElement("span"); c.textContent = count; meta.appendChild(c); }
-    var cp = document.createElement("button");
-    cp.className = "copy"; cp.type = "button"; cp.textContent = "COPY";
-    cp.addEventListener("click", onCopy);
-    meta.appendChild(cp);
-    head.appendChild(dt); head.appendChild(meta);
-    return head;
-  }
-
-  function renderDoc() {
-    if (!docDays.length) {
-      var e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = "受信簿にまだ何も無いみたい。上に書けば、ここにも受信簿にも入る。";
-      $log.appendChild(e);
-      return;
-    }
-    docDays.forEach(function (day) {
-      var m = String(day.heading || "").match(/^##\s*(\d{4}-\d{2}-\d{2})\s*(?:\((.)\))?/);
-      var date = m ? m[1] : String(day.heading || "").replace(/^##\s*/, "");
-      var dow = m ? (m[2] || dowOf(m[1])) : "";
-      var body = (day.lines || []);
-
-      var sec = document.createElement("section");
-      sec.className = "day";
-      sec.appendChild(dayHeadEl(date, dow, "", function () { copyLines(date, dow, body); }));
-
-      if (!body.length) {
-        var em = document.createElement("div");
-        em.className = "empty"; em.textContent = "（この日はまだ空）";
-        sec.appendChild(em);
-      }
-      body.forEach(function (line) {
-        var row = document.createElement("div");
-        row.className = "item";
-        var t = String(line);
-        var tm = document.createElement("div");
-        tm.className = "item-time";
-        var bd = document.createElement("div");
-        bd.className = "item-body";
-        var hit = t.match(/^\s*(\d{1,2}:\d{2})\s*(.*)$/);
-        if (hit) { tm.textContent = hit[1]; t = hit[2]; }
-        var tx = document.createElement("span");
-        tx.className = "item-text"; tx.textContent = t;
-        bd.appendChild(tx);
-        row.appendChild(tm); row.appendChild(bd);
-        sec.appendChild(row);
-      });
-      $log.appendChild(sec);
-    });
-  }
-
-  function renderLocal() {
-    if (!items.length) {
-      var e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = configured()
-        ? "受信簿を読みにいけなかったから、このブラウザから送った分だけ出してる。"
-        : "まだ1件もないよ。送り先を設定すると、受信簿の中身がここに出る。";
-      $log.appendChild(e);
-      return;
-    }
-    var byDate = {}, order = [];
-    items.forEach(function (it) {
-      if (!byDate[it.date]) { byDate[it.date] = []; order.push(it.date); }
-      byDate[it.date].push(it);
-    });
-    order.sort().reverse();
-
-    var note = document.createElement("div");
-    note.className = "notice bad";
-    note.textContent = "※ 受信簿を読めないので、このブラウザの控えを表示中。" + (readError || "");
-    $log.appendChild(note);
-
-    order.forEach(function (date) {
-      var list = byDate[date].slice().sort(function (a, b) { return a.time < b.time ? -1 : 1; });
-      var sec = document.createElement("section");
-      sec.className = "day";
-      sec.appendChild(dayHeadEl(date, dowOf(date), list.length + "件", function () { copyDay(date, list); }));
-      list.forEach(function (it) {
-        var row = document.createElement("div");
-        row.className = "item" + (it.confirmed ? "" : " pending");
-        var tm = document.createElement("div");
-        tm.className = "item-time"; tm.textContent = it.time || "";
-        var body = document.createElement("div");
-        body.className = "item-body";
-        if (it.tagKey) {
-          var tg = document.createElement("span");
-          tg.className = "item-tag"; tg.textContent = labelOf(it.tagKey);
-          body.appendChild(tg);
-        }
-        var tx = document.createElement("span");
-        tx.className = "item-text"; tx.textContent = it.text;
-        body.appendChild(tx);
-        row.appendChild(tm); row.appendChild(body);
-        sec.appendChild(row);
-      });
-      $log.appendChild(sec);
-    });
-  }
-
-  function toClipboard(txt) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt).then(
-        function () { toast("この日の分をコピーしたよ"); },
-        function () { toast("コピーできなかった"); }
-      );
-    } else { toast("コピーできなかった"); }
-  }
-
-  function copyLines(date, dow, lines) {
-    toClipboard(["## " + date + (dow ? " (" + dow + ")" : ""), ""].concat(lines).join("\n"));
-  }
-
-  function copyDay(date, list) {
-    var out = ["## " + date + " (" + dowOf(date) + ")", ""];
-    list.forEach(function (it) {
-      out.push("- " + (it.time ? it.time + " " : "") + (it.tagKey ? labelOf(it.tagKey) + " " : "") + it.text.replace(/\n/g, "\n  "));
-    });
-    toClipboard(out.join("\n"));
-  }
-
-  render();
   checkReady();
   armIdle();
   grow();
-  refresh();
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "visible") refresh();
-  });
 })();
 </script>
 </body>
