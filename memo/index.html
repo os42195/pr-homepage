@@ -253,14 +253,17 @@
   </section>
 
 
+  <p class="readback">
+    読み返しは
+    <a href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
+    から。
+  </p>
+
   <details class="settings" id="settings">
     <summary>送り先の設定</summary>
     <div class="settings-body">
       <label>受け皿のURL（…/exec）
         <input type="url" id="endpoint" placeholder="https://script.google.com/macros/s/……/exec" autocomplete="off">
-      </label>
-      <label>合言葉（今は使っていない・空でOK）
-        <input type="password" id="secret" placeholder="空のままでOK" autocomplete="off">
       </label>
       <div class="settings-note">
         このブラウザの中だけに保存される。ほかの人にも、AIにも渡らない。
@@ -272,11 +275,6 @@
     </div>
   </details>
 
-  <p class="readback">
-    読み返しは
-    <a href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
-    から。
-  </p>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -307,7 +305,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $date = $("date"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow");
-  var $endpoint = $("endpoint"), $secret = $("secret"), $settings = $("settings");
+  var $endpoint = $("endpoint"), $settings = $("settings");
 
   var ticker = null, lastInput = 0;
   var sending = false;
@@ -336,7 +334,6 @@ window.addEventListener("unhandledrejection", function (ev) {
 
   // ---- 設定 ----
   $endpoint.value = load(K.ep) || "";
-  $secret.value = load(K.sec) || "";
   var $savedMark = $("savedMark");
   function flashSaved() {
     $savedMark.hidden = false;
@@ -345,13 +342,11 @@ window.addEventListener("unhandledrejection", function (ev) {
   }
   function saveSettings() {
     store(K.ep, $endpoint.value.trim());
-    store(K.sec, $secret.value);
     checkReady();
     flashSaved();
   }
   ["input", "change", "blur", "paste"].forEach(function (ev) {
     $endpoint.addEventListener(ev, function () { setTimeout(saveSettings, 0); });
-    $secret.addEventListener(ev, function () { setTimeout(saveSettings, 0); });
   });
 
   function configured() { return !!(($endpoint.value||"").trim()); }
@@ -374,7 +369,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     } catch (e) {}
   })();
 
-  try { localStorage.removeItem(K.log); } catch (e) {}
+  try { localStorage.removeItem(K.log); localStorage.removeItem(K.sec); } catch (e) {}
 
   function saveDraft() {
     store(K.draft, JSON.stringify({ text: $text.value, date: $date.value }));
@@ -471,7 +466,6 @@ window.addEventListener("unhandledrejection", function (ev) {
   function postIt(payload) {
     var url = $endpoint.value.trim();
     var body = JSON.stringify({
-      secret: $secret.value,
       date: payload.date, time: payload.time,
       tag: payload.tag, text: payload.text
     });
@@ -541,21 +535,19 @@ window.addEventListener("unhandledrejection", function (ev) {
     function show() { $diagOut.textContent = out.join("\n"); }
 
     out.push("1. URL: " + (url ? (/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(url) ? "形は正しい" : "★形がおかしい（…/exec で終わってる？）") : "★空っぽ"));
-    out.push("2. 合言葉: " + (($secret.value || "").length ? (($secret.value || "").length + "文字入ってる（今は使わない）") : "空（今はこれでOK）"));
     show();
     if (!url) return;
 
     fetch(url, { method: "GET" })
       .then(function (r) { return r.text(); })
       .then(function (t) {
-        out.push("3. 受け皿を開く: 返事あり" + (t.indexOf("動いています") >= 0 ? "（正常）" : "（内容が想定外: " + t.slice(0, 60) + "）"));
+        out.push("2. 受け皿を開く: 返事あり" + (t.indexOf("動いています") >= 0 ? "（正常）" : "（内容が想定外: " + t.slice(0, 60) + "）"));
       })
-      .catch(function (e) { out.push("3. 受け皿を開く: ★失敗 " + (e && e.message || "")); })
+      .catch(function (e) { out.push("2. 受け皿を開く: ★失敗 " + (e && e.message || "")); })
       .then(function () {
         show();
         var d = new Date();
         var body = JSON.stringify({
-          secret: $secret.value,
           date: $date.value || todayStr(),
           time: nowTime(),
           tag: "",
@@ -568,10 +560,10 @@ window.addEventListener("unhandledrejection", function (ev) {
           redirect: "follow"
         }).then(function (r) { return r.text(); })
           .then(function (t) {
-            out.push("4. 送信テスト: 返事 → " + t.slice(0, 160));
+            out.push("3. 送信テスト: 返事 → " + t.slice(0, 160));
           })
           .catch(function (e) {
-            out.push("4. 送信テスト: ★返事を読めなかった " + (e && e.message || ""));
+            out.push("3. 送信テスト: ★返事を読めなかった " + (e && e.message || ""));
           });
       })
       .then(show);
