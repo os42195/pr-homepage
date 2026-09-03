@@ -580,13 +580,17 @@
   // ---- 一覧（受信簿そのものを読んで表示する）----
   var docDays = null;   // 受信簿から読んだ中身
   var loading = false;
+  var readError = "";   // 読み取りに失敗した理由
 
   function refresh() {
     if (!configured() || loading) return;
     loading = true;
     postRead().then(function (res) {
       loading = false;
-      if (res && res.ok) { docDays = res.days || []; }
+      if (res && res.ok && res.days) { docDays = res.days; readError = ""; }
+      else if (res && res.error) { readError = "受け皿の返事：" + res.error; }
+      else if (res && res.ok) { readError = "受け皿は答えたが、日付データが入っていない（Google側のコードが古い版のまま）"; }
+      else { readError = "受け皿の返事が読めない（通信がブロックされている）"; }
       render();
     });
   }
@@ -600,8 +604,8 @@
       body: body,
       redirect: "follow"
     }).then(function (r) { return r.text(); })
-      .then(function (t) { try { return JSON.parse(t); } catch (e) { return null; } })
-      .catch(function () { return null; });
+      .then(function (t) { try { return JSON.parse(t); } catch (e) { return { error: "返事が読めない形だった" }; } })
+      .catch(function (e) { return { error: "通信できなかった（" + (e && e.message || "原因不明") + "）" }; });
   }
 
   function render() {
@@ -693,8 +697,8 @@
     order.sort().reverse();
 
     var note = document.createElement("div");
-    note.className = "empty";
-    note.textContent = "※ 受信簿を読めなかったので、このブラウザの控えを表示中";
+    note.className = "notice bad";
+    note.textContent = "※ 受信簿を読めないので、このブラウザの控えを表示中。" + (readError || "");
     $log.appendChild(note);
 
     order.forEach(function (date) {
