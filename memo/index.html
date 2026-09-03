@@ -131,18 +131,17 @@
   .today-btn:hover { background: var(--ai-soft); }
 
   .tags {
-    display: flex; gap: 6px;
-    overflow-x: auto; padding-bottom: 2px;
-    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
   }
-  .tags::-webkit-scrollbar { display: none; }
-  .tag { flex: none; }
   .tag {
     font-family: var(--sans); font-size: 13px;
     color: var(--ink-2); background: var(--surface-2);
     border: 1px solid transparent; border-radius: 999px;
-    padding: 9px 13px; cursor: pointer; min-height: 40px;
-    display: inline-flex; align-items: center;
+    padding: 9px 6px; cursor: pointer; min-height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; white-space: nowrap;
     transition: background .12s ease, color .12s ease;
   }
   .tag:hover { border-color: var(--line); }
@@ -240,6 +239,7 @@
     .composer { padding: 12px; gap: 10px; }
     .send-row { margin: -4px -12px -12px; padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); }
     textarea { min-height: 30vh; }
+    .tag { font-size: 12.5px; padding: 9px 4px; }
   }
 </style>
 </head>
@@ -302,12 +302,12 @@
 <script>
 (function () {
   var TAGS = [
-    { key: "tennis", label: "🎾 テニス / 指導" },
-    { key: "idea",   label: "💡 アイデア" },
-    { key: "feel",   label: "💭 感情パーキング" },
-    { key: "todo",   label: "📌 Todo / 連絡" },
-    { key: "health", label: "🏥 体調 / 健康" },
-    { key: "want",   label: "🌟 やりたいこと" }
+    { key: "tennis", label: "🎾 テニス / 指導",   short: "🎾 テニス" },
+    { key: "idea",   label: "💡 アイデア",       short: "💡 アイデア" },
+    { key: "feel",   label: "💭 感情パーキング", short: "💭 感情" },
+    { key: "todo",   label: "📌 Todo / 連絡",    short: "📌 Todo" },
+    { key: "health", label: "🏥 体調 / 健康",    short: "🏥 体調" },
+    { key: "want",   label: "🌟 やりたいこと",   short: "🌟 やりたい" }
   ];
   var DOW = ["日","月","火","水","木","金","土"];
   var IDLE = 30000;   // 手が止まってから送るまで
@@ -363,7 +363,8 @@
   // ---- タグ ----
   TAGS.forEach(function (t) {
     var b = document.createElement("button");
-    b.type = "button"; b.className = "tag"; b.textContent = t.label;
+    b.type = "button"; b.className = "tag"; b.textContent = t.short || t.label;
+    b.title = t.label;
     b.setAttribute("aria-pressed", "false");
     b.addEventListener("click", function () {
       activeTag = (activeTag === t.key) ? "" : t.key;
