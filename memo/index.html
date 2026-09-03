@@ -320,8 +320,8 @@
       <label>受け皿のURL（…/exec）
         <input type="url" id="endpoint" placeholder="https://script.google.com/macros/s/……/exec" autocomplete="off">
       </label>
-      <label>合言葉
-        <input type="password" id="secret" placeholder="Apps Scriptに書いた言葉" autocomplete="off">
+      <label>合言葉（今は使っていない・空でOK）
+        <input type="password" id="secret" placeholder="空のままでOK" autocomplete="off">
       </label>
       <div class="settings-note">
         このブラウザの中だけに保存される。ほかの人にも、AIにも渡らない。
@@ -437,11 +437,11 @@ window.addEventListener("unhandledrejection", function (ev) {
     $secret.addEventListener(ev, function () { setTimeout(saveSettings, 0); });
   });
 
-  function configured() { return !!(($endpoint.value||"").trim() && ($secret.value||"")); }
+  function configured() { return !!(($endpoint.value||"").trim()); }
   function checkReady() {
     if (!configured()) {
       $settings.open = true;
-      say("送り先がまだ設定されてないよ。「送り先の設定」に、受け皿のURLと合言葉を入れてね。入れるまで、書いたものはこのブラウザに預かっておく。");
+      say("送り先がまだ設定されてないよ。「送り先の設定」に、受け皿のURLを入れてね。入れるまで、書いたものはこのブラウザに預かっておく。");
     } else { say(""); }
   }
 
@@ -635,7 +635,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     function show() { $diagOut.textContent = out.join("\n"); }
 
     out.push("1. URL: " + (url ? (/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(url) ? "形は正しい" : "★形がおかしい（…/exec で終わってる？）") : "★空っぽ"));
-    out.push("2. 合言葉: " + (($secret.value || "").length ? (($secret.value || "").length + "文字入ってる") : "★空っぽ"));
+    out.push("2. 合言葉: " + (($secret.value || "").length ? (($secret.value || "").length + "文字入ってる（今は使わない）") : "空（今はこれでOK）"));
     show();
     if (!url) return;
 
