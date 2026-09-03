@@ -455,12 +455,12 @@
     mark("count", countLeft + "秒後に受信簿へ送るよ");
     countTimer = setInterval(function () {
       countLeft--;
-      if (countLeft <= 0) { stopTimers(); send(); }
+      if (countLeft <= 0) { stopTimers(); send(true); }
       else mark("count", countLeft + "秒後に受信簿へ送るよ");
     }, 1000);
   }
 
-  function send() {
+  function send(auto) {
     composing = false;
     var text = $text.value.replace(/\s+$/, "");
     if (!text.trim() || sending) return;
@@ -468,8 +468,9 @@
 
     // 同じ文を続けて送らない（二重送信よけ）
     var sig = ($date.value || todayStr()) + "\n" + text;
-    if (sig === lastSig && Date.now() - lastSentAt < 300000) {
-      mark("sent", "さっきと同じ文だから送らなかったよ");
+    if (auto && sig === lastSig && Date.now() - lastSentAt < 120000) {
+      mark("sent", "さっきと同じ文なので自動では送らなかった");
+      toast("さっきと同じ文だよ。送るなら「いま送る」を押して");
       updateButton();
       return;
     }
@@ -563,10 +564,10 @@
   });
   window.addEventListener("resize", grow);
   $date.addEventListener("change", saveDraft);
-  $sendNow.addEventListener("click", send);
+  $sendNow.addEventListener("click", function () { send(false); });
   $text.addEventListener("keydown", function (e) {
     if (e.isComposing || e.keyCode === 229) return;
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); send(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); send(false); }
   });
   $text.addEventListener("blur", function () {
     if (composing) return;
