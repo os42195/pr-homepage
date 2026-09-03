@@ -231,6 +231,11 @@
   .settings-body { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 16px; }
   .settings-body label { font-size: 12.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
   .settings-note { font-size: 12px; color: var(--ink-3); line-height: 1.65; }
+  .saved-mark {
+    font: 600 12px/1 var(--sans); color: var(--ok);
+    background: var(--surface-2); border: 1px solid var(--ok);
+    border-radius: 999px; padding: 7px 12px; align-self: flex-start;
+  }
   .diag-btn {
     font: 600 13px/1 var(--sans);
     color: var(--ai); background: var(--surface-2);
@@ -322,6 +327,7 @@
         このブラウザの中だけに保存される。ほかの人にも、AIにも渡らない。
         スマホでも使うときは、スマホ側で同じものを1回入れてね。
       </div>
+      <div class="saved-mark" id="savedMark" hidden>✓ 保存した</div>
       <button class="diag-btn" id="diag" type="button">つながりを確認する</button>
       <pre class="diag-out" id="diagOut" hidden></pre>
     </div>
@@ -414,8 +420,22 @@ window.addEventListener("unhandledrejection", function (ev) {
   // ---- 設定 ----
   $endpoint.value = load(K.ep) || "";
   $secret.value = load(K.sec) || "";
-  $endpoint.addEventListener("change", function(){ store(K.ep, $endpoint.value.trim()); checkReady(); });
-  $secret.addEventListener("change", function(){ store(K.sec, $secret.value); checkReady(); });
+  var $savedMark = $("savedMark");
+  function flashSaved() {
+    $savedMark.hidden = false;
+    clearTimeout(flashSaved._t);
+    flashSaved._t = setTimeout(function () { $savedMark.hidden = true; }, 2500);
+  }
+  function saveSettings() {
+    store(K.ep, $endpoint.value.trim());
+    store(K.sec, $secret.value);
+    checkReady();
+    flashSaved();
+  }
+  ["input", "change", "blur", "paste"].forEach(function (ev) {
+    $endpoint.addEventListener(ev, function () { setTimeout(saveSettings, 0); });
+    $secret.addEventListener(ev, function () { setTimeout(saveSettings, 0); });
+  });
 
   function configured() { return !!(($endpoint.value||"").trim() && ($secret.value||"")); }
   function checkReady() {
