@@ -120,15 +120,7 @@
     accent-color: var(--ai);
   }
   input[type="url"], input[type="password"] { width: 100%; font-size: 13px; }
-  .today-btn {
-    font: 500 12px/1 var(--mono); letter-spacing: .04em;
-    color: var(--ai); background: none;
-    border: 1px solid var(--line); border-radius: 999px;
-    padding: 0 13px; min-height: 40px; cursor: pointer;
-    display: inline-flex; align-items: center;
-  }
   input[type="date"] { min-height: 40px; }
-  .today-btn:hover { background: var(--ai-soft); }
 
 
   textarea {
@@ -263,7 +255,6 @@
   <div class="row footrow">
     <span class="eyebrow">日付</span>
     <input type="date" id="date">
-    <button class="today-btn" id="todayBtn" type="button">今日にもどす</button>
   </div>
 
   <details class="settings" id="settings">
@@ -384,7 +375,6 @@ window.addEventListener("unhandledrejection", function (ev) {
     try {
       var d = JSON.parse(raw);
       if (d.text) $text.value = d.text;
-      if (d.date) $date.value = d.date;
     } catch (e) {}
   })();
 
@@ -394,7 +384,6 @@ window.addEventListener("unhandledrejection", function (ev) {
     store(K.draft, JSON.stringify({ text: $text.value, date: $date.value }));
   }
 
-  $("todayBtn").addEventListener("click", function () { $date.value = todayStr(); saveDraft(); });
 
   // ---- 送信 ----
   function stopTimers() {
