@@ -409,12 +409,10 @@ window.addEventListener("unhandledrejection", function (ev) {
     Array.prototype.forEach.call($tags.children, function (el, i) {
       el.setAttribute("aria-pressed", TAGS[i].key === activeTag ? "true" : "false");
     });
-    if (activeTag) {
-      $tagNowLabel.textContent = labelOf(activeTag) + " として送る";
-      $tagNow.hidden = false;
-    } else {
-      $tagNow.hidden = true;
-    }
+    var lab = activeTag ? labelOf(activeTag) : "";
+    if (!lab) { activeTag = ""; $tagNow.hidden = true; return; }
+    $tagNowLabel.textContent = lab + " として送る";
+    $tagNow.hidden = false;
   }
 
   // ---- 設定 ----
@@ -468,7 +466,7 @@ window.addEventListener("unhandledrejection", function (ev) {
       var d = JSON.parse(raw);
       if (d.text) $text.value = d.text;
       if (d.date) $date.value = d.date;
-      if (d.tag) { activeTag = d.tag; }
+      if (d.tag && labelOf(d.tag)) { activeTag = d.tag; }
     } catch (e) {}
   })();
 
