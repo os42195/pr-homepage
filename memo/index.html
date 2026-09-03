@@ -128,7 +128,7 @@
     color: var(--ink); background: var(--surface);
     border: 1px solid var(--line); border-radius: 8px;
     padding: 11px 12px;
-    min-height: 46vh; max-height: 70vh;
+    min-height: 52vh; max-height: 74vh;
     resize: vertical; width: 100%;
   }
   textarea::placeholder { color: var(--ink-3); }
@@ -139,12 +139,11 @@
 
   .send-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    position: sticky; bottom: 0; z-index: 5;
-    margin: -4px -12px -12px;
-    padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+    margin: -4px -12px 0;
+    padding: 8px 12px 9px;
     background: var(--surface);
-    border-top: 1px solid var(--line-soft);
-    border-radius: 0 0 10px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    border-radius: 10px 10px 0 0;
   }
   .save-state {
     font-family: var(--mono); font-size: 11.5px; letter-spacing: .03em;
@@ -243,14 +242,14 @@
   <div id="status" class="notice" hidden></div>
 
   <section class="composer">
-    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。手を止めて30秒で受信簿へ送るよ。"></textarea>
-
     <div class="send-row">
       <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
         <span class="dot"></span><span id="saveLabel">まだ何も書いてない</span>
       </span>
       <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
     </div>
+
+    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。手を止めて30秒で受信簿へ送るよ。"></textarea>
   </section>
 
 
