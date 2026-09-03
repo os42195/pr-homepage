@@ -581,12 +581,19 @@
   var docDays = null;   // 受信簿から読んだ中身
   var loading = false;
   var readError = "";   // 読み取りに失敗した理由
+  var readTried = false;
 
   function refresh() {
-    if (!configured() || loading) return;
+    if (!configured()) {
+      readTried = true; readError = "送り先が未設定"; render(); return;
+    }
+    if (loading) return;
     loading = true;
-    postRead().then(function (res) {
-      loading = false;
+    var timeout = new Promise(function (resolve) {
+      setTimeout(function () { resolve({ error: "受け皿が10秒以内に応えなかった" }); }, 10000);
+    });
+    Promise.race([postRead(), timeout]).then(function (res) {
+      loading = false; readTried = true;
       if (res && res.ok && res.days) { docDays = res.days; readError = ""; }
       else if (res && res.error) { readError = "受け皿の返事：" + res.error; }
       else if (res && res.ok) { readError = "受け皿は答えたが、日付データが入っていない（Google側のコードが古い版のまま）"; }
@@ -611,6 +618,13 @@
   function render() {
     $log.textContent = "";
     if (docDays) { renderDoc(); return; }
+    if (!readTried) {
+      var w = document.createElement("div");
+      w.className = "empty";
+      w.textContent = "受信簿を読み込み中…";
+      $log.appendChild(w);
+      return;
+    }
     renderLocal();
   }
 
