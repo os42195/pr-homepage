@@ -11,27 +11,29 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="受信簿">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#b83b2e">
+<meta name="theme-color" content="#b2362a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
     color-scheme: light;
-    --paper:      #f4f4f1;
-    --surface:    #ffffff;
-    --surface-2:  #eceded;
-    --line:       #d8dad9;
-    --line-soft:  #e6e7e6;
-    --ink:        #1b2229;
-    --ink-2:      #4d5760;
-    --ink-3:      #7d868e;
-    --ai:         #27496b;
-    --ai-soft:    #e3eaf1;
-    --ai-ink:     #1d3a54;
+    /* 首里城：朱塗り・金の装飾・黒漆・胡粉の白 */
+    --paper:      #f7f3ec;
+    --surface:    #fffdf9;
+    --surface-2:  #f0e8dc;
+    --line:       #ddd2c2;
+    --line-soft:  #ebe3d6;
+    --ink:        #241b17;
+    --ink-2:      #574a43;
+    --ink-3:      #8a796e;
+    --ai:         #b2362a;
+    --ai-soft:    #f7e4df;
+    --ai-ink:     #8a2820;
+    --gold:       #a8842c;
     --ok:         #3f7a52;
-    --danger:     #9b3b32;
-    --shadow:     0 1px 2px rgba(27,34,41,.06), 0 8px 24px rgba(27,34,41,.05);
+    --danger:     #6f2a1b;
+    --shadow:     0 1px 2px rgba(36,27,23,.07), 0 8px 24px rgba(36,27,23,.06);
     --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     --sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic Medium", system-ui, sans-serif;
     --serif: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
@@ -39,22 +41,24 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --paper: #14181d; --surface: #1b2027; --surface-2: #232a32;
-      --line: #2f3843; --line-soft: #262e37;
-      --ink: #e7eaed; --ink-2: #a9b3bd; --ink-3: #78838e;
-      --ai: #8ab6d8; --ai-soft: #22323f; --ai-ink: #bcd6ea;
+      --paper: #16110f; --surface: #1e1815; --surface-2: #29211d;
+      --line: #3b302a; --line-soft: #2f2621;
+      --ink: #f0e7de; --ink-2: #c0b0a4; --ink-3: #8d7d72;
+      --ai: #e0715f; --ai-soft: #3a221d; --ai-ink: #f3b8ab;
+      --gold: #d9b45f;
       --ok: #7fb894; --danger: #d98a80;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --paper: #14181d; --surface: #1b2027; --surface-2: #232a32;
-    --line: #2f3843; --line-soft: #262e37;
-    --ink: #e7eaed; --ink-2: #a9b3bd; --ink-3: #78838e;
-    --ai: #8ab6d8; --ai-soft: #22323f; --ai-ink: #bcd6ea;
+    --paper: #16110f; --surface: #1e1815; --surface-2: #29211d;
+    --line: #3b302a; --line-soft: #2f2621;
+    --ink: #f0e7de; --ink-2: #c0b0a4; --ink-3: #8d7d72;
+    --ai: #e0715f; --ai-soft: #3a221d; --ai-ink: #f3b8ab;
+    --gold: #d9b45f;
     --ok: #7fb894; --danger: #d98a80;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.3);
   }
 
   * { box-sizing: border-box; }
@@ -77,8 +81,13 @@
     gap: 22px;
   }
 
-  header { display: flex; flex-direction: column; gap: 4px; }
+  header {
+    display: flex; flex-direction: column; gap: 6px;
+    border-bottom: 1px solid var(--gold);
+    padding-bottom: 10px;
+  }
   h1 {
+    color: var(--ai);
     font-family: var(--serif);
     font-size: 25px; font-weight: 600;
     letter-spacing: .06em; margin: 0;
@@ -99,7 +108,7 @@
   .eyebrow {
     font-family: var(--mono); font-size: 10.5px;
     letter-spacing: .14em; text-transform: uppercase;
-    color: var(--ink-3);
+    color: var(--gold);
   }
   input[type="date"], input[type="url"], input[type="password"] {
     font: 500 15px/1.4 var(--mono);
@@ -182,8 +191,8 @@
     border: none; border-radius: 8px;
     padding: 12px 20px; min-height: 44px; cursor: pointer;
   }
-  :root[data-theme="dark"] .sendnow { color: #101820; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sendnow { color: #101820; } }
+  :root[data-theme="dark"] .sendnow { color: #1a100d; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sendnow { color: #1a100d; } }
   .sendnow:disabled { opacity: .4; cursor: default; }
 
   .notice {
@@ -201,7 +210,7 @@
   details.settings > summary {
     cursor: pointer; padding: 11px 0;
     font-family: var(--mono); font-size: 11.5px;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+    letter-spacing: .08em; text-transform: uppercase; color: var(--gold);
   }
   .settings-body { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 16px; }
   .settings-body label { font-size: 12.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
