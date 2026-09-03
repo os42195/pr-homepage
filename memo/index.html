@@ -75,21 +75,20 @@
   .wrap {
     max-width: 460px;
     margin: 0 auto;
-    padding: 24px 18px 96px;
+    padding: 14px 16px 48px;
     display: flex;
     flex-direction: column;
     gap: 22px;
   }
 
   header {
-    display: flex; flex-direction: column; gap: 6px;
     border-bottom: 1px solid var(--gold);
-    padding-bottom: 10px;
+    padding-bottom: 6px;
   }
   h1 {
     color: var(--ai);
     font-family: var(--serif);
-    font-size: 25px; font-weight: 600;
+    font-size: 18px; font-weight: 600;
     letter-spacing: .06em; margin: 0;
     text-wrap: balance;
   }
@@ -101,9 +100,10 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     box-shadow: var(--shadow);
-    padding: 16px;
-    display: flex; flex-direction: column; gap: 13px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
   }
+  .footrow { opacity: .85; }
   .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .eyebrow {
     font-family: var(--mono); font-size: 10.5px;
@@ -130,31 +130,13 @@
   input[type="date"] { min-height: 40px; }
   .today-btn:hover { background: var(--ai-soft); }
 
-  .tags {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-  }
-  .tag {
-    font-family: var(--sans); font-size: 13px;
-    color: var(--ink-2); background: var(--surface-2);
-    border: 1px solid transparent; border-radius: 999px;
-    padding: 9px 6px; cursor: pointer; min-height: 42px;
-    display: flex; align-items: center; justify-content: center;
-    text-align: center; white-space: nowrap;
-    transition: background .12s ease, color .12s ease;
-  }
-  .tag:hover { border-color: var(--line); }
-  .tag[aria-pressed="true"] {
-    background: var(--ai-soft); border-color: var(--ai); color: var(--ai-ink);
-  }
 
   textarea {
     font-family: var(--sans); font-size: 16px; line-height: 1.8;
     color: var(--ink); background: var(--surface);
     border: 1px solid var(--line); border-radius: 8px;
     padding: 11px 12px;
-    min-height: 34vh; max-height: 60vh;
+    min-height: 46vh; max-height: 70vh;
     resize: vertical; width: 100%;
   }
   textarea::placeholder { color: var(--ink-3); }
@@ -162,28 +144,12 @@
     outline: 2px solid var(--ai); outline-offset: 2px;
   }
 
-  .tagnow {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    background: var(--ai-soft);
-    border: 1px solid var(--ai);
-    border-radius: 8px;
-    padding: 8px 10px 8px 12px;
-    margin-top: -4px;
-  }
-  .tagnow-label { font-size: 13.5px; color: var(--ai-ink); }
-  .tagnow-clear {
-    font: 500 11px/1 var(--mono); letter-spacing: .06em;
-    color: var(--ai-ink); background: none;
-    border: 1px solid var(--ai); border-radius: 999px;
-    padding: 0 10px; min-height: 30px; cursor: pointer;
-  }
-  .tagnow-clear:hover { background: var(--surface); }
 
   .send-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     position: sticky; bottom: 0; z-index: 5;
-    margin: -6px -16px -16px;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    margin: -4px -12px -12px;
+    padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
     background: var(--surface);
     border-top: 1px solid var(--line-soft);
     border-radius: 0 0 10px 10px;
@@ -268,13 +234,9 @@
   @media (prefers-reduced-motion: reduce) { .toast, .tag { transition: none; } }
 
   @media (max-width: 540px) {
-    .wrap { padding: 14px 12px 40px; gap: 14px; }
-    h1 { font-size: 20px; }
-    .sub { font-size: 12px; }
-    .composer { padding: 12px; gap: 10px; }
+    .wrap { padding: 12px 12px 36px; gap: 12px; }
     .send-row { margin: -4px -12px -12px; padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); }
     textarea { min-height: 30vh; }
-    .tag { font-size: 12.5px; padding: 9px 4px; }
   }
 </style>
 </head>
@@ -283,28 +245,12 @@
 <div class="wrap">
   <header>
     <h1>受信簿ポスト</h1>
-    <div class="sub">
-      書いて手を止めると、受信簿のGoogleドキュメントへ日付ごとに追記される。
-    </div>
   </header>
 
   <div id="status" class="notice" hidden></div>
 
   <section class="composer">
-    <div class="row">
-      <span class="eyebrow">日付</span>
-      <input type="date" id="date">
-      <button class="today-btn" id="todayBtn" type="button">今日にもどす</button>
-    </div>
-
-    <div class="tags" id="tags" role="group" aria-label="タグ"></div>
-
-    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。手を止めて30秒たつと、そのまま受信簿へ送るよ。"></textarea>
-
-    <div class="tagnow" id="tagNow" hidden>
-      <span class="tagnow-label" id="tagNowLabel"></span>
-      <button class="tagnow-clear" id="tagNowClear" type="button" aria-label="タグを外す">外す</button>
-    </div>
+    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。手を止めて30秒で受信簿へ送るよ。"></textarea>
 
     <div class="send-row">
       <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
@@ -313,6 +259,12 @@
       <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
     </div>
   </section>
+
+  <div class="row footrow">
+    <span class="eyebrow">日付</span>
+    <input type="date" id="date">
+    <button class="today-btn" id="todayBtn" type="button">今日にもどす</button>
+  </div>
 
   <details class="settings" id="settings">
     <summary>送り先の設定</summary>
@@ -334,7 +286,7 @@
   </details>
 
   <p class="readback">
-    書いたものは受信簿のドキュメントに入るよ。読み返しは
+    読み返しは
     <a href="https://docs.google.com/document/d/1SWEqKdvrh5--hmeMtyF7kY-w3QPqMGICxNh4JJgCNBQ/edit" target="_blank" rel="noopener">受信簿を開く</a>
     から。
   </p>
@@ -359,27 +311,17 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var TAGS = [
-    { key: "tennis", label: "🎾 テニス / 指導",   short: "🎾 テニス" },
-    { key: "idea",   label: "💡 アイデア",       short: "💡 アイデア" },
-    { key: "feel",   label: "💭 感情パーキング", short: "💭 感情" },
-    { key: "todo",   label: "📌 Todo / 連絡",    short: "📌 Todo" },
-    { key: "health", label: "🏥 体調 / 健康",    short: "🏥 体調" },
-    { key: "want",   label: "🌟 やりたいこと",   short: "🌟 やりたい" }
-  ];
   var DOW = ["日","月","火","水","木","金","土"];
   var IDLE_SEC = 30;   // 手が止まってから送るまで
   var COUNT = 4;      // 送る直前のカウントダウン（秒）
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log" };
 
   var $ = function (id) { return document.getElementById(id); };
-  var $date = $("date"), $tags = $("tags"), $text = $("text");
+  var $date = $("date"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow");
   var $endpoint = $("endpoint"), $secret = $("secret"), $settings = $("settings");
-  var $tagNow = $("tagNow"), $tagNowLabel = $("tagNowLabel"), $tagNowClear = $("tagNowClear");
 
-  var activeTag = "";
   var ticker = null, lastInput = 0;
   var sending = false;
   var composing = false;   // 日本語入力の変換中
@@ -392,7 +334,6 @@ window.addEventListener("unhandledrejection", function (ev) {
   function todayStr() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
   function nowTime() { var d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
   function dowOf(s) { var p = String(s).split("-"); var d = new Date(+p[0], +p[1]-1, +p[2]); return isNaN(d.getTime()) ? "" : DOW[d.getDay()]; }
-  function labelOf(k) { for (var i=0;i<TAGS.length;i++) if (TAGS[i].key===k) return TAGS[i].label; return ""; }
   function newId() { return (self.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2); }
 
   function toast(m) {
@@ -405,15 +346,6 @@ window.addEventListener("unhandledrejection", function (ev) {
   }
   function mark(state, label) { $saveState.setAttribute("data-state", state); $saveLabel.textContent = label; }
 
-  function paintTags() {
-    Array.prototype.forEach.call($tags.children, function (el, i) {
-      el.setAttribute("aria-pressed", TAGS[i].key === activeTag ? "true" : "false");
-    });
-    var lab = activeTag ? labelOf(activeTag) : "";
-    if (!lab) { activeTag = ""; $tagNow.hidden = true; return; }
-    $tagNowLabel.textContent = lab + " として送る";
-    $tagNow.hidden = false;
-  }
 
   // ---- 設定 ----
   $endpoint.value = load(K.ep) || "";
@@ -443,19 +375,6 @@ window.addEventListener("unhandledrejection", function (ev) {
     } else { say(""); }
   }
 
-  // ---- タグ ----
-  TAGS.forEach(function (t) {
-    var b = document.createElement("button");
-    b.type = "button"; b.className = "tag"; b.textContent = t.short || t.label;
-    b.title = t.label;
-    b.setAttribute("aria-pressed", "false");
-    b.addEventListener("click", function () {
-      activeTag = (activeTag === t.key) ? "" : t.key;
-      paintTags();
-      saveDraft();
-    });
-    $tags.appendChild(b);
-  });
 
   // ---- 下書きの復元 ----
   $date.value = todayStr();
@@ -466,14 +385,13 @@ window.addEventListener("unhandledrejection", function (ev) {
       var d = JSON.parse(raw);
       if (d.text) $text.value = d.text;
       if (d.date) $date.value = d.date;
-      if (d.tag && labelOf(d.tag)) { activeTag = d.tag; }
     } catch (e) {}
   })();
 
   try { localStorage.removeItem(K.log); } catch (e) {}
 
   function saveDraft() {
-    store(K.draft, JSON.stringify({ text: $text.value, date: $date.value, tag: activeTag }));
+    store(K.draft, JSON.stringify({ text: $text.value, date: $date.value }));
   }
 
   $("todayBtn").addEventListener("click", function () { $date.value = todayStr(); saveDraft(); });
@@ -534,8 +452,7 @@ window.addEventListener("unhandledrejection", function (ev) {
       id: newId(),
       date: $date.value || todayStr(),
       time: nowTime(),
-      tag: activeTag ? labelOf(activeTag) : "",
-      tagKey: activeTag,
+      tag: "",
       text: text
     };
 
@@ -550,9 +467,8 @@ window.addEventListener("unhandledrejection", function (ev) {
       if (res.ok) {
         lastSig = payload.date + "\n" + payload.text;
         lastSentAt = Date.now();
-        $text.value = ""; activeTag = ""; composing = false;
-        paintTags();
-        saveDraft();
+        $text.value = ""; composing = false;
+              saveDraft();
         mark("sent", res.confirmed ? ("受信簿に入れたよ " + payload.time) : ("送ったよ " + payload.time + "（要確認）"));
         toast(res.confirmed ? "受信簿に追記したよ" : "送ったよ。念のため受信簿を見てね");
         say("");
@@ -676,14 +592,11 @@ window.addEventListener("unhandledrejection", function (ev) {
       .then(show);
   });
 
-  $tagNowClear.addEventListener("click", function () {
-    activeTag = ""; paintTags(); saveDraft(); $text.focus();
-  });
 
-  paintTags();
   checkReady();
   armIdle();
   grow();
+  try { $text.focus(); } catch (e) {}
 })();
 </script>
 </body>
