@@ -323,6 +323,14 @@
         表の中身は右腕AIに「置換表ちょうだい」と言えば出てくる。
       </div>
       <div class="saved-mark" id="dictMark" hidden>✓ 置換表を保存した（<span id="dictCount">0</span>件）</div>
+      <label>消す口ぐせ（1行1語。空にすると消さない）
+        <textarea class="dict" id="fillers" spellcheck="false"></textarea>
+      </label>
+      <div class="settings-note">
+        前後が句読点か空白のときだけ消す（「あの人」の「あの」は残る）。
+        ほかに、同じ語のくり返し・全角の数字と英字・重なった句読点も自動で整える。
+      </div>
+      <div class="saved-mark" id="fillersMark" hidden>✓ 口ぐせを保存した（<span id="fillersCount">0</span>語）</div>
       <button class="diag-btn" id="diag" type="button">つながりを確認する</button>
       <pre class="diag-out" id="diagOut" hidden></pre>
     </div>
@@ -350,7 +358,7 @@ window.addEventListener("unhandledrejection", function (ev) {
 });
 (function () {
   var DOW = ["日","月","火","水","木","金","土"];
-  var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict" };
+  var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers" };
 
   var $ = function (id) { return document.getElementById(id); };
   var $date = $("date"), $text = $("text");
@@ -359,6 +367,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = $("unsent");
   var $dict = $("dict"), $dictMark = $("dictMark"), $dictCount = $("dictCount");
+  var $fillers = $("fillers"), $fillersMark = $("fillersMark"), $fillersCount = $("fillersCount");
   var $fixed = $("fixed"), $fixedLabel = $("fixedLabel"), $undo = $("undo");
 
   var sending = false;
@@ -451,16 +460,117 @@ window.addEventListener("unhandledrejection", function (ev) {
 
   function hideFixed() { $fixed.hidden = true; beforeFix = null; }
 
+  // ---- 整え（口ぐせ・くり返し・全角・句読点） ----
+  var DEFAULT_FILLERS = "えーと\nえっと\nええと\nえーっと\nえー\nあのー\nあの\nああ\nうーん\nうーんと\nそのー\nまあ\nまぁ\nなんか\nなんていうか\nなんだろう";
+  var fillerList = [];
+  var skipTidy = false;      // 「戻す」で整えを止めた（この下書きの間）
+  var PUNCT = "、。！？!?,.\\s";
+
+  function escRe(t) { return String(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function parseFillers(src) {
+    var seen = {}, out = [];
+    String(src || "").split(/\r?\n/).forEach(function (l) {
+      l = l.trim(); if (!l || l.charAt(0) === "#" || seen[l]) return;
+      seen[l] = 1; out.push(l);
+    });
+    out.sort(function (a, b) { return b.length - a.length; });
+    return out;
+  }
+  function loadFillers() {
+    var v = load(K.fillers);
+    $fillers.value = (v === null) ? DEFAULT_FILLERS : v;
+    fillerList = parseFillers($fillers.value);
+    $fillersCount.textContent = fillerList.length;
+  }
+  function saveFillers() {
+    store(K.fillers, $fillers.value);
+    fillerList = parseFillers($fillers.value);
+    $fillersCount.textContent = fillerList.length;
+    $fillersMark.hidden = false;
+    clearTimeout(saveFillers._t);
+    saveFillers._t = setTimeout(function () { $fillersMark.hidden = true; }, 2500);
+  }
+  ["input", "change", "blur", "paste"].forEach(function (ev) {
+    $fillers.addEventListener(ev, function () { setTimeout(saveFillers, 0); });
+  });
+
+  // 口ぐせ: 前が文頭・句読点・空白で、後ろが句読点・空白・文末のときだけ消す
+  function stripFillers(t, done) {
+    var n = 0;
+    fillerList.forEach(function (f) {
+      // 前が文頭・句読点・空白で、後ろが句読点・空白・文末（後ろの読点や句点ごと消す）
+      var re = new RegExp("(^|[" + PUNCT + "])" + escRe(f) + "(?=[" + PUNCT + "]|$)[、,。.\\s]*", "g");
+      t = t.replace(re, function (m, pre) { n++; return pre; });
+      // 「今日はあの、ハルと」のように前がつながっていても、直後が読点なら口ぐせとみなして消す
+      var re2 = new RegExp(escRe(f) + "[、,]+", "g");
+      t = t.replace(re2, function () { n++; return ""; });
+    });
+    if (n) done.push("口ぐせを" + n + "つ消した");
+    return t;
+  }
+  // くり返し: 「あの、あの」「それでそれで」→1つ（読点や空白をはさむものは1文字から、はさまないものは3文字から）
+  function collapseRepeats(t, done) {
+    var n = 0, before = t, i;
+    for (i = 0; i < 5; i++) {
+      var prev = t;
+      t = t.replace(/(^|[、。！？!?\s])([^、。！？!?\s]{1,8})[、,\s]+\2(?=[、。！？!?\s]|$)/g, function (m, pre, u) { n++; return pre + u; });
+      t = t.replace(/([^、。！？!?\s]{3,8})\1/g, function (m, u) { n++; return u; });
+      if (t === prev) break;
+    }
+    if (t !== before) done.push("くり返しを1つに");
+    return t;
+  }
+  // 全角の数字・英字 → 半角
+  function toHalf(t, done) {
+    var before = t;
+    t = t.replace(/[０-９Ａ-Ｚａ-ｚ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+    if (t !== before) done.push("全角→半角");
+    return t;
+  }
+  // 句読点とすき間: 重なり・行頭の読点・句読点の前の空白・連続する空白
+  function tidyPunct(t, done, final) {
+    var before = t;
+    t = t.replace(/[ \t\u3000]+/g, " ")
+         .replace(/ +([、。！？!?])/g, "$1")
+         .replace(/([、。！？!?]) +/g, "$1")
+         .replace(/、{2,}/g, "、").replace(/。{2,}/g, "。")
+         .replace(/、。/g, "。").replace(/。、/g, "。")
+         .replace(/(^|\n)[、 ]+/g, "$1")
+         .replace(/[ \t]+(\n|$)/g, "$1");
+    if (final) {
+      t = t.replace(/[、,\s]+$/, "");
+      if (t && !/[。！？!?」』）)\]\n]$/.test(t)) t += "。";
+    }
+    if (t !== before) done.push("句読点を掃除");
+    return t;
+  }
+  // 入力途中の末尾（最後の句読点より後ろ）は触らない。final のときだけ全体
+  function tidy(t, done, final) {
+    if (skipTidy) return t;
+    var head = t, tail = "";
+    if (!final) {
+      var m = t.match(/^([\s\S]*[、。！？!?\n])([\s\S]*)$/);
+      if (!m) return toHalf(t, done);
+      head = m[1]; tail = m[2];
+    }
+    head = stripFillers(head, done);
+    head = collapseRepeats(head, done);
+    head = toHalf(head, done);
+    head = tidyPunct(head, done, final);
+    return head + toHalf(tail, []);
+  }
+
   // 本文に置換表を当てる。直したら true
-  function applyDict() {
-    if (composing || !dictRules.length) return false;
-    var text = $text.value, out = text, done = [];
+  function applyDict(final) {
+    if (composing) return false;
+    var text = $text.value, out = text, done = [], notes = [];
     dictRules.forEach(function (r) {
       if (skipRules[r[0]]) return;
       if (out.indexOf(r[0]) < 0) return;
       out = out.split(r[0]).join(r[1]);
       done.push(r);
     });
+    out = tidy(out, notes, !!final);
     if (out === text) return false;
     var atEnd = $text.selectionStart === text.length;
     beforeFix = text;
@@ -469,7 +579,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     grow(); saveDraft(); armIdle();
     $fixedLabel.innerHTML = "直したよ: " + done.map(function (r) {
       return "<b>" + esc(r[0]) + "</b>→<b>" + esc(r[1]) + "</b>";
-    }).join("、");
+    }).concat(notes.map(esc)).join("、");
     $fixed.hidden = false;
     applyDict.last = done;
     return true;
@@ -482,12 +592,14 @@ window.addEventListener("unhandledrejection", function (ev) {
   $undo.addEventListener("click", function () {
     if (beforeFix === null) return;
     (applyDict.last || []).forEach(function (r) { skipRules[r[0]] = true; });
+    skipTidy = true;
     $text.value = beforeFix;
     hideFixed();
     grow(); saveDraft(); armIdle();
-    toast("戻したよ。この文の間は同じ語を直さない");
+    toast("戻したよ。この文を送るまで、自動では整えない");
   });
   loadDict();
+  loadFillers();
 
 
   // ---- 下書きの復元 ----
@@ -543,7 +655,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   }
   function shareText() {
     clearTimeout(dictTimer);
-    applyDict();
+    applyDict(true);
     var text = $text.value.replace(/\s+$/, "");
     if (!text.trim()) return;
     saveDraft();
@@ -567,7 +679,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   function send(auto) {
     composing = false;
     clearTimeout(dictTimer);
-    applyDict();
+    applyDict(true);
     var text = $text.value.replace(/\s+$/, "");
     if (!text.trim() || sending) return;
     stopTimers();
@@ -601,7 +713,7 @@ window.addEventListener("unhandledrejection", function (ev) {
         lastSig = payload.date + "\n" + payload.text;
         lastSentAt = Date.now();
         $text.value = ""; composing = false;
-        skipRules = {}; hideFixed();
+        skipRules = {}; skipTidy = false; hideFixed();
         saveDraft();
         $unsent.hidden = true;
         $sendNow.classList.remove("urgent");
@@ -666,7 +778,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   });
   $text.addEventListener("input", function (e) {
     grow(); saveDraft(); updateButton();
-    if (!$text.value.trim()) { skipRules = {}; hideFixed(); }
+    if (!$text.value.trim()) { skipRules = {}; skipTidy = false; hideFixed(); }
     if (e && e.isComposing) { markComposing(); stopTimers(); return; }
     clearTimeout(imeGuard); composing = false;
     armIdle(); scheduleDict();
