@@ -172,8 +172,9 @@
     font-family: var(--sans); font-size: 14px; font-weight: 600;
     color: var(--ai); background: var(--surface-2);
     border: 1px solid var(--ai); border-radius: 8px;
-    padding: 0 16px; min-height: 44px; cursor: pointer;
+    padding: 0 13px; min-height: 44px; cursor: pointer;
   }
+  @media (max-width: 400px) { .share, .sendnow { padding-left: 11px; padding-right: 11px; font-size: 13.5px; } }
   .share:disabled { opacity: .4; cursor: default; }
 
   .notice {
@@ -294,12 +295,13 @@
         <span class="dot"></span><span id="saveLabel">まだ何も書いてない</span>
       </span>
       <div class="btns">
+        <button class="share" id="copy" type="button" disabled aria-label="本文をコピー">コピー</button>
         <button class="share" id="share" type="button" disabled aria-label="ほかのアプリへ共有">共有</button>
         <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
       </div>
     </div>
 
-    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。ほかのアプリへ渡すなら「共有」。"></textarea>
+    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。ほかへ持っていくなら「コピー」か「共有」。"></textarea>
   </section>
 
 
@@ -363,7 +365,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $ = function (id) { return document.getElementById(id); };
   var $date = $("date"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
-  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share");
+  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy");
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = $("unsent");
   var $dict = $("dict"), $dictMark = $("dictMark"), $dictCount = $("dictCount");
@@ -626,6 +628,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   function updateButton() {
     $sendNow.disabled = sending || !$text.value.trim();
     $share.disabled = !$text.value.trim();
+    $copy.disabled = !$text.value.trim();
   }
 
   function armIdle() {
@@ -675,6 +678,16 @@ window.addEventListener("unhandledrejection", function (ev) {
     }
   }
   $share.addEventListener("click", shareText);
+  $copy.addEventListener("click", function () {
+    clearTimeout(dictTimer);
+    applyDict(true);
+    var text = $text.value.replace(/\s+$/, "");
+    if (!text.trim()) return;
+    saveDraft();
+    copyText(text).then(function (ok) {
+      toast(ok ? "コピーしたよ。受信簿にはまだ送ってない" : "コピーできなかった");
+    });
+  });
 
   function send(auto) {
     composing = false;
