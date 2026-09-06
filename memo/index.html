@@ -209,7 +209,13 @@
     background: var(--surface); border: 1px solid var(--ai); border-radius: 999px;
     padding: 8px 12px; cursor: pointer; flex: none;
   }
-  .under { display: flex; justify-content: flex-end; margin-top: -4px; }
+  .under { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: -4px; }
+  .ai {
+    font: 600 13px/1 var(--sans); color: var(--ai);
+    background: var(--surface-2); border: 1px solid var(--gold); border-radius: 999px;
+    padding: 9px 14px; min-height: 36px; cursor: pointer;
+  }
+  .ai:disabled { opacity: .35; cursor: default; }
   .clear {
     font: 600 12.5px/1 var(--sans); color: var(--ink-3);
     background: none; border: 1px solid var(--line); border-radius: 999px;
@@ -311,6 +317,7 @@
 
     <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。ほかへ持っていくなら「コピー」か「共有」。"></textarea>
     <div class="under">
+      <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">✦ AIで整える</button>
       <button class="clear" id="clear" type="button" disabled>入力欄を空にする</button>
     </div>
   </section>
@@ -333,7 +340,7 @@
       </label>
       <div class="settings-note">
         入力が1秒止まるたびに、この表のとおり置き換える。これもこのブラウザの中だけに保存される。
-        表の中身は右腕AIに「置換表ちょうだい」と言えば出てくる。
+        受け皿がv4以降なら、Driveの置換表を自動で読むので、ここに貼らなくてもよい（<span id="remoteDict">受け皿からはまだ読めていない</span>）。
       </div>
       <div class="saved-mark" id="dictMark" hidden>✓ 置換表を保存した（<span id="dictCount">0</span>件）</div>
       <label>消す口ぐせ（1行1語。空にすると消さない）
@@ -376,7 +383,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $ = function (id) { return document.getElementById(id); };
   var $date = $("date"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
-  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy"), $clear = $("clear");
+  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy"), $clear = $("clear"), $ai = $("ai"), $remoteDict = $("remoteDict");
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = $("unsent");
   var $dict = $("dict"), $dictMark = $("dictMark"), $dictCount = $("dictCount");
@@ -384,6 +391,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $fixed = $("fixed"), $fixedLabel = $("fixedLabel"), $undo = $("undo");
 
   var sending = false;
+  var tidying = false;     // AIで整えている最中
   var composing = false;   // 日本語入力の変換中
   var lastSig = "", lastSentAt = 0;
 
@@ -419,6 +427,8 @@ window.addEventListener("unhandledrejection", function (ev) {
     store(K.ep, $endpoint.value.trim());
     checkReady();
     flashSaved();
+    clearTimeout(saveSettings._t);
+    saveSettings._t = setTimeout(fetchRemoteDict, 800);
   }
   ["input", "change", "blur", "paste"].forEach(function (ev) {
     $endpoint.addEventListener(ev, function () { setTimeout(saveSettings, 0); });
@@ -454,15 +464,40 @@ window.addEventListener("unhandledrejection", function (ev) {
     rules.sort(function (a, b) { return b[0].length - a[0].length; });   // 長い語から
     return rules;
   }
+  var remoteRules = [];
+  function mergeRules() {
+    var seen = {}, all = [];
+    parseDict($dict.value).concat(remoteRules).forEach(function (r) {
+      if (seen[r[0]]) return; seen[r[0]] = 1; all.push(r);
+    });
+    all.sort(function (a, b) { return b[0].length - a[0].length; });
+    dictRules = all;
+    $dictCount.textContent = parseDict($dict.value).length;
+  }
   function loadDict() {
     $dict.value = load(K.dict) || "";
-    dictRules = parseDict($dict.value);
-    $dictCount.textContent = dictRules.length;
+    try { remoteRules = parseDict(load("jushinbo.dictRemote") || ""); } catch (e) { remoteRules = []; }
+    if (remoteRules.length) $remoteDict.textContent = "前回読んだ " + remoteRules.length + " 件を使っている";
+    mergeRules();
+  }
+  function fetchRemoteDict() {
+    if (!configured()) return;
+    var url = $endpoint.value.trim() + "?dict=1";
+    fetch(url, { method: "GET", redirect: "follow" })
+      .then(function (r) { return r.text(); })
+      .then(function (t) {
+        var j = null; try { j = JSON.parse(t); } catch (e) {}
+        if (!j || !j.ok || typeof j.dict !== "string") { $remoteDict.textContent = "受け皿からは読めなかった（v4未満か、置換表が無い）"; return; }
+        remoteRules = parseDict(j.dict);
+        store("jushinbo.dictRemote", j.dict);
+        mergeRules();
+        $remoteDict.textContent = "受け皿から " + remoteRules.length + " 件を自動で読んだ";
+      })
+      .catch(function () { $remoteDict.textContent = "受け皿に届かなかった"; });
   }
   function saveDict() {
     store(K.dict, $dict.value);
-    dictRules = parseDict($dict.value);
-    $dictCount.textContent = dictRules.length;
+    mergeRules();
     $dictMark.hidden = false;
     clearTimeout(saveDict._t);
     saveDict._t = setTimeout(function () { $dictMark.hidden = true; }, 2500);
@@ -616,6 +651,49 @@ window.addEventListener("unhandledrejection", function (ev) {
     try { $text.focus(); } catch (e) {}
   });
 
+  // ---- AIで整える（受け皿→Gemini。押したときだけ。自動では呼ばない） ----
+  $ai.addEventListener("click", function () {
+    if (tidying || sending) return;
+    clearTimeout(dictTimer);
+    applyDict(true);
+    var text = $text.value.replace(/\s+$/, "");
+    if (!text.trim()) return;
+    if (!configured()) { checkReady(); return; }
+    tidying = true; updateButton();
+    $ai.textContent = "✦ 整えてる…";
+    mark("sending", "AIで整えてる…");
+    say("");
+    var url = $endpoint.value.trim();
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "tidy", text: text }),
+      redirect: "follow"
+    }).then(function (r) { return r.text(); })
+      .then(function (t) {
+        var j = null; try { j = JSON.parse(t); } catch (e) {}
+        if (!j) throw new Error("受け皿の返事が読めなかった（v4に更新してある？）");
+        if (!j.ok) throw new Error(j.error || "受け皿が断った");
+        var outText = String(j.text || "").replace(/\s+$/, "");
+        if (!outText) throw new Error("返ってきた文が空だった");
+        if (outText === text) { toast("直すところは無かったよ"); return; }
+        beforeFix = text;
+        applyDict.last = null;
+        $text.value = outText;
+        grow(); saveDraft(); armIdle();
+        $fixedLabel.textContent = "AIで整えたよ。変なところがあれば「戻す」";
+        $fixed.hidden = false;
+        try { $text.focus(); } catch (e) {}
+      })
+      .catch(function (e) {
+        say("AIで整えられなかった：" + (e && e.message || "理由不明") + "。文はそのまま残してあるよ。", true);
+      })
+      .then(function () {
+        tidying = false; $ai.textContent = "✦ AIで整える";
+        updateButton(); armIdle();
+      });
+  });
+
   // ---- 入力欄を空にする（送らずに捨てる。「戻す」で復活できる） ----
   $clear.addEventListener("click", function () {
     var text = $text.value;
@@ -659,6 +737,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     $share.disabled = !$text.value.trim();
     $copy.disabled = !$text.value.trim();
     $clear.disabled = !$text.value.trim();
+    $ai.disabled = tidying || sending || !$text.value.trim();
   }
 
   function armIdle() {
@@ -881,6 +960,7 @@ window.addEventListener("unhandledrejection", function (ev) {
 
 
   checkReady();
+  fetchRemoteDict();
   armIdle();
   grow();
   try { $text.focus(); } catch (e) {}
