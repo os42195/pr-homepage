@@ -167,6 +167,14 @@
   :root[data-theme="dark"] .sendnow { color: #1a100d; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sendnow { color: #1a100d; } }
   .sendnow:disabled { opacity: .4; cursor: default; }
+  .btns { display: flex; align-items: center; gap: 8px; flex: none; }
+  .share {
+    font-family: var(--sans); font-size: 14px; font-weight: 600;
+    color: var(--ai); background: var(--surface-2);
+    border: 1px solid var(--ai); border-radius: 8px;
+    padding: 0 16px; min-height: 44px; cursor: pointer;
+  }
+  .share:disabled { opacity: .4; cursor: default; }
 
   .notice {
     font-size: 13.5px; line-height: 1.7; color: var(--ink-2);
@@ -264,10 +272,13 @@
       <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
         <span class="dot"></span><span id="saveLabel">まだ何も書いてない</span>
       </span>
-      <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
+      <div class="btns">
+        <button class="share" id="share" type="button" disabled aria-label="ほかのアプリへ共有">共有</button>
+        <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
+      </div>
     </div>
 
-    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。"></textarea>
+    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。ほかのアプリへ渡すなら「共有」。"></textarea>
   </section>
 
 
@@ -315,7 +326,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $ = function (id) { return document.getElementById(id); };
   var $date = $("date"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
-  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow");
+  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share");
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = $("unsent");
 
@@ -392,6 +403,7 @@ window.addEventListener("unhandledrejection", function (ev) {
 
   function updateButton() {
     $sendNow.disabled = sending || !$text.value.trim();
+    $share.disabled = !$text.value.trim();
   }
 
   function armIdle() {
@@ -406,6 +418,39 @@ window.addEventListener("unhandledrejection", function (ev) {
     mark("draft", "未送信（押すと送る）");
   }
 
+
+  // ---- 共有（ほかのアプリへ渡す。受信簿には送らないし、入力欄も消さない） ----
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function(){ return true; }, function(){ return false; });
+    }
+    try {
+      $text.focus(); $text.select();
+      var ok = document.execCommand("copy");
+      $text.setSelectionRange($text.value.length, $text.value.length);
+      return Promise.resolve(!!ok);
+    } catch (e) { return Promise.resolve(false); }
+  }
+  function shareText() {
+    var text = $text.value.replace(/\s+$/, "");
+    if (!text.trim()) return;
+    saveDraft();
+    if (navigator.share) {
+      navigator.share({ text: text }).then(function () {
+        toast("ほかのアプリへ渡したよ。受信簿にはまだ送ってない");
+      }).catch(function (e) {
+        if (e && e.name === "AbortError") return;   // 共有シートを閉じただけ
+        copyText(text).then(function (ok) {
+          toast(ok ? "共有できなかったので、文をコピーしたよ" : "共有もコピーもできなかった");
+        });
+      });
+    } else {
+      copyText(text).then(function (ok) {
+        toast(ok ? "この環境は共有シートが無いので、文をコピーしたよ" : "コピーできなかった");
+      });
+    }
+  }
+  $share.addEventListener("click", shareText);
 
   function send(auto) {
     composing = false;
