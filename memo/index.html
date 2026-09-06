@@ -209,6 +209,14 @@
     background: var(--surface); border: 1px solid var(--ai); border-radius: 999px;
     padding: 8px 12px; cursor: pointer; flex: none;
   }
+  .under { display: flex; justify-content: flex-end; margin-top: -4px; }
+  .clear {
+    font: 600 12.5px/1 var(--sans); color: var(--ink-3);
+    background: none; border: 1px solid var(--line); border-radius: 999px;
+    padding: 9px 14px; min-height: 36px; cursor: pointer;
+  }
+  .clear:hover { color: var(--danger); border-color: var(--danger); }
+  .clear:disabled { opacity: .35; cursor: default; }
   textarea.dict {
     min-height: 120px; max-height: 40vh; font-size: 14px; line-height: 1.7;
     font-family: var(--mono);
@@ -302,6 +310,9 @@
     </div>
 
     <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。ほかへ持っていくなら「コピー」か「共有」。"></textarea>
+    <div class="under">
+      <button class="clear" id="clear" type="button" disabled>入力欄を空にする</button>
+    </div>
   </section>
 
 
@@ -365,7 +376,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $ = function (id) { return document.getElementById(id); };
   var $date = $("date"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
-  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy");
+  var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy"), $clear = $("clear");
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = $("unsent");
   var $dict = $("dict"), $dictMark = $("dictMark"), $dictCount = $("dictCount");
@@ -593,12 +604,30 @@ window.addEventListener("unhandledrejection", function (ev) {
   }
   $undo.addEventListener("click", function () {
     if (beforeFix === null) return;
-    (applyDict.last || []).forEach(function (r) { skipRules[r[0]] = true; });
-    skipTidy = true;
+    var cleared = (applyDict.last === null);
+    if (!cleared) {
+      (applyDict.last || []).forEach(function (r) { skipRules[r[0]] = true; });
+      skipTidy = true;
+    }
     $text.value = beforeFix;
     hideFixed();
     grow(); saveDraft(); armIdle();
-    toast("戻したよ。この文を送るまで、自動では整えない");
+    toast(cleared ? "戻したよ" : "戻したよ。この文を送るまで、自動では整えない");
+    try { $text.focus(); } catch (e) {}
+  });
+
+  // ---- 入力欄を空にする（送らずに捨てる。「戻す」で復活できる） ----
+  $clear.addEventListener("click", function () {
+    var text = $text.value;
+    if (!text.trim()) return;
+    clearTimeout(dictTimer);
+    beforeFix = text;
+    applyDict.last = null;
+    $text.value = "";
+    skipRules = {}; skipTidy = false;
+    grow(); saveDraft(); armIdle();
+    $fixedLabel.textContent = "入力欄を空にしたよ（受信簿には送ってない）";
+    $fixed.hidden = false;
   });
   loadDict();
   loadFillers();
@@ -629,6 +658,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     $sendNow.disabled = sending || !$text.value.trim();
     $share.disabled = !$text.value.trim();
     $copy.disabled = !$text.value.trim();
+    $clear.disabled = !$text.value.trim();
   }
 
   function armIdle() {
