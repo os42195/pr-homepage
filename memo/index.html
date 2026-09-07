@@ -411,7 +411,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-07 i";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-09-07 j";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
@@ -420,6 +420,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy"), $clear = $("clear"), $ai = $("ai"), $remoteDict = $("remoteDict");
   var $xpost = $("xpost"), $xdraft = $("xdraft"), $xtext = $("xtext"), $xcount = $("xcount"), $xcopy = $("xcopy"), $xclose = $("xclose"), $sns = $("sns"), $xlabel = $("xlabel");
+  var X_EXTRA = "飼い犬の名前（ポポ）も出さず「うちの犬」と書く。家族・教え子・知人の名前は必ず一般化する。";
   var SNS_STYLE = "これはSNS（note・Facebook・Instagram）に公開する文にする。文字数の制限はなく、要約もしない。ルール5と5bで直した人の名前を、そのまま出さずに一般化する。家族は「妻」「孫」「娘」「妹」等、教えている子は「教え子」「ジュニア」、それ以外の人は「仲間」「知人」「先生」「コーチ」等に置き換える。飼い犬は「うちの犬」。書き手本人の名義、サービス名・製品名、地名・施設名・大会名はそのまま出してよい。ハッシュタグ・絵文字は足さない。";
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = { hidden: true };
@@ -778,7 +779,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     say("");
     var order = ($style.value || "").trim();
     var payload = (kind === "x")
-      ? { action: "tidy", mode: "x", text: text, style: order }
+      ? { action: "tidy", mode: "x", text: text, style: X_EXTRA + (order ? "\n" + order : "") }
       : { action: "tidy", text: text, style: SNS_STYLE + (order ? "\n" + order : "") };
     fetch($endpoint.value.trim(), {
       method: "POST",
