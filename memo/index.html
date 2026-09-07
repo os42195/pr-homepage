@@ -75,21 +75,21 @@
   .wrap {
     max-width: 460px;
     margin: 0 auto;
-    padding: 14px 16px 48px;
+    padding: 8px 12px 24px;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 10px;
   }
 
   header {
     display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     border-bottom: 1px solid var(--gold);
-    padding-bottom: 6px;
+    padding-bottom: 4px;
   }
   h1 {
     color: var(--ai);
     font-family: var(--serif);
-    font-size: 18px; font-weight: 600;
+    font-size: 16px; font-weight: 600;
     letter-spacing: .06em; margin: 0;
     text-wrap: balance;
   }
@@ -101,8 +101,8 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     box-shadow: var(--shadow);
-    padding: 12px;
-    display: flex; flex-direction: column; gap: 10px;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
   }
   .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .eyebrow {
@@ -127,8 +127,8 @@
     font-family: var(--sans); font-size: 16px; line-height: 1.8;
     color: var(--ink); background: var(--surface);
     border: 1px solid var(--line); border-radius: 8px;
-    padding: 11px 12px;
-    min-height: 52vh; max-height: 74vh;
+    padding: 10px 11px;
+    min-height: 56vh; max-height: 78vh;
     resize: vertical; width: 100%;
   }
   textarea::placeholder { color: var(--ink-3); }
@@ -139,8 +139,8 @@
 
   .send-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    margin: -4px -12px 0;
-    padding: 8px 12px 9px;
+    margin: -2px -10px 0;
+    padding: 6px 10px 7px;
     background: var(--surface);
     border-bottom: 1px solid var(--line-soft);
     border-radius: 10px 10px 0 0;
@@ -162,7 +162,7 @@
     font-family: var(--sans); font-size: 14px; font-weight: 600;
     color: #fff; background: var(--ai);
     border: none; border-radius: 8px;
-    padding: 12px 20px; min-height: 44px; cursor: pointer;
+    padding: 0 16px; min-height: 40px; cursor: pointer;
   }
   :root[data-theme="dark"] .sendnow { color: #1a100d; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sendnow { color: #1a100d; } }
@@ -172,9 +172,9 @@
     font-family: var(--sans); font-size: 14px; font-weight: 600;
     color: var(--ai); background: var(--surface-2);
     border: 1px solid var(--ai); border-radius: 8px;
-    padding: 0 13px; min-height: 44px; cursor: pointer;
+    padding: 0 12px; min-height: 40px; cursor: pointer;
   }
-  @media (max-width: 400px) { .share, .sendnow { padding-left: 11px; padding-right: 11px; font-size: 13.5px; } }
+  @media (max-width: 400px) { .share, .sendnow { padding-left: 10px; padding-right: 10px; font-size: 13.5px; } }
   .share:disabled { opacity: .4; cursor: default; }
 
   .notice {
@@ -213,7 +213,7 @@
   .ai {
     font: 600 13px/1 var(--sans); color: var(--ai);
     background: var(--surface-2); border: 1px solid var(--gold); border-radius: 999px;
-    padding: 9px 14px; min-height: 36px; cursor: pointer;
+    padding: 0 12px; min-height: 34px; cursor: pointer;
   }
   .ai:disabled { opacity: .35; cursor: default; }
   .under-left { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -230,7 +230,7 @@
   .clear {
     font: 600 12.5px/1 var(--sans); color: var(--ink-3);
     background: none; border: 1px solid var(--line); border-radius: 999px;
-    padding: 9px 14px; min-height: 36px; cursor: pointer;
+    padding: 0 12px; min-height: 34px; cursor: pointer;
   }
   .clear:hover { color: var(--danger); border-color: var(--danger); }
   .clear:disabled { opacity: .35; cursor: default; }
@@ -290,9 +290,9 @@
   @media (prefers-reduced-motion: reduce) { .toast, .tag { transition: none; } }
 
   @media (max-width: 540px) {
-    .wrap { padding: 12px 12px 36px; gap: 12px; }
-    .send-row { margin: -4px -12px -12px; padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); }
-    textarea { min-height: 30vh; }
+    .wrap { padding: 6px 8px 20px; gap: 8px; }
+    .send-row { margin: -2px -10px -10px; padding: 7px 10px calc(7px + env(safe-area-inset-bottom)); }
+    textarea { min-height: 46vh; }
   }
 </style>
 </head>
@@ -308,7 +308,6 @@
   </header>
 
   <div id="status" class="notice" hidden></div>
-  <div id="unsent" class="unsent" hidden>未送信の下書きがあるよ。「いま送る」で受信簿へ入る。</div>
   <div id="fixed" class="fixed" hidden>
     <span id="fixedLabel"></span>
     <button class="undo" id="undo" type="button">戻す</button>
@@ -317,28 +316,28 @@
   <section class="composer">
     <div class="send-row">
       <span class="save-state" id="saveState" data-state="idle" role="status" aria-live="polite">
-        <span class="dot"></span><span id="saveLabel">まだ何も書いてない</span>
+        <span class="dot"></span><span id="saveLabel">未記入</span>
       </span>
       <div class="btns">
         <button class="share" id="copy" type="button" disabled aria-label="本文をコピー">コピー</button>
         <button class="share" id="share" type="button" disabled aria-label="ほかのアプリへ共有">共有</button>
-        <button class="sendnow" id="sendNow" type="button" disabled>いま送る</button>
+        <button class="sendnow" id="sendNow" type="button" disabled>送る</button>
       </div>
     </div>
 
-    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。書けたら「いま送る」を押してね。勝手には送らないよ。ほかへ持っていくなら「コピー」か「共有」。"></textarea>
+    <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。「送る」で受信簿へ。勝手には送らない。"></textarea>
     <div class="under">
       <div class="under-left">
-        <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">✦ AIで整える</button>
-        <button class="ai" id="xpost" type="button" disabled title="X投稿用に140字へ。人名は一般化する">𝕏 140字に</button>
+        <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">AI整形</button>
+        <button class="ai" id="xpost" type="button" disabled title="X投稿用に140字へ。人名は一般化する">X140</button>
       </div>
-      <button class="clear" id="clear" type="button" disabled>入力欄を空にする</button>
+      <button class="clear" id="clear" type="button" disabled>空にする</button>
     </div>
   </section>
 
   <section class="xdraft" id="xdraft" hidden>
     <div class="row">
-      <span class="eyebrow">X用の下書き（日記の本文はそのまま）</span>
+      <span class="eyebrow">X用</span>
       <span class="xcount" id="xcount">0 / 140</span>
     </div>
     <textarea id="xtext" spellcheck="false" placeholder="ここにX用の文が出る。手で直してもいい。"></textarea>
@@ -411,7 +410,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-07 g";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-09-07 h";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
@@ -421,7 +420,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy"), $clear = $("clear"), $ai = $("ai"), $remoteDict = $("remoteDict");
   var $xpost = $("xpost"), $xdraft = $("xdraft"), $xtext = $("xtext"), $xcount = $("xcount"), $xcopy = $("xcopy"), $xclose = $("xclose");
   var $endpoint = $("endpoint"), $settings = $("settings");
-  var $unsent = $("unsent");
+  var $unsent = { hidden: true };
   var $dict = $("dict"), $dictMark = $("dictMark"), $dictCount = $("dictCount");
   var $fillers = $("fillers"), $fillersMark = $("fillersMark"), $fillersCount = $("fillersCount");
   var $style = $("style"), $styleMark = $("styleMark");
@@ -709,8 +708,8 @@ window.addEventListener("unhandledrejection", function (ev) {
     if (!text.trim()) return;
     if (!configured()) { checkReady(); return; }
     tidying = true; updateButton();
-    $ai.textContent = "✦ 整えてる…";
-    mark("sending", "AIで整えてる…");
+    $ai.textContent = "整形中…";
+    mark("sending", "整形中…");
     say("");
     var url = $endpoint.value.trim();
     fetch(url, {
@@ -738,7 +737,7 @@ window.addEventListener("unhandledrejection", function (ev) {
         say("AIで整えられなかった：" + (e && e.message || "理由不明") + "。文はそのまま残してあるよ。", true);
       })
       .then(function () {
-        tidying = false; $ai.textContent = "✦ AIで整える";
+        tidying = false; $ai.textContent = "AI整形";
         updateButton(); armIdle();
       });
   });
@@ -769,7 +768,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     if (!text.trim()) return;
     if (!configured()) { checkReady(); return; }
     tidying = true; updateButton();
-    $xpost.textContent = "𝕏 作ってる…";
+    $xpost.textContent = "作成中…";
     say("");
     fetch($endpoint.value.trim(), {
       method: "POST",
@@ -788,7 +787,7 @@ window.addEventListener("unhandledrejection", function (ev) {
         try { $xdraft.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
       })
       .catch(function (e) { say("X用の文を作れなかった：" + (e && e.message || "理由不明"), true); })
-      .then(function () { tidying = false; $xpost.textContent = "𝕏 140字に"; updateButton(); armIdle(); });
+      .then(function () { tidying = false; $xpost.textContent = "X140"; updateButton(); armIdle(); });
   });
 
   // ---- 入力欄を空にする（送らずに捨てる。「戻す」で復活できる） ----
@@ -855,9 +854,9 @@ window.addEventListener("unhandledrejection", function (ev) {
     $unsent.hidden = !has;
     $sendNow.classList.toggle("urgent", has);
     document.title = (has ? "● " : "") + "受信簿ポスト";
-    if (!has) { composing = false; mark("idle", "まだ何も書いてない"); return; }
+    if (!has) { composing = false; mark("idle", "未記入"); return; }
     if (composing) { mark("draft", "入力中"); return; }
-    mark("draft", "未送信（押すと送る）");
+    mark("draft", "未送信");
   }
 
 
@@ -931,10 +930,10 @@ window.addEventListener("unhandledrejection", function (ev) {
       text: text
     };
 
-    if (!configured()) { mark("error", "送り先が未設定"); checkReady(); return; }
+    if (!configured()) { mark("error", "未設定"); checkReady(); return; }
 
     sending = true; updateButton();
-    mark("sending", "受信簿へ送ってる…");
+    mark("sending", "送信中…");
     say("");
 
     postIt(payload).then(function (res) {
@@ -948,13 +947,13 @@ window.addEventListener("unhandledrejection", function (ev) {
         $unsent.hidden = true;
         $sendNow.classList.remove("urgent");
         document.title = "受信簿ポスト";
-        mark("sent", res.confirmed ? ("受信簿に入れたよ " + payload.time) : ("送ったよ " + payload.time + "（要確認）"));
+        mark("sent", res.confirmed ? ("送った " + payload.time) : ("送った? " + payload.time));
         toast(res.confirmed ? "受信簿に追記したよ" : "送ったよ。念のため受信簿を見てね");
         say("");
         updateButton();
         $text.focus();
       } else {
-        mark("error", "送れなかった");
+        mark("error", "失敗");
         say("受信簿へ送れなかった：" + (res && res.error || "理由不明") + "。文章はこのまま残してあるから、通信を確かめて「いま送る」を押してみて。", true);
         updateButton();
       }
