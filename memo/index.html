@@ -384,14 +384,9 @@
         スマホでも使うときは、スマホ側で同じものを1回入れてね。
       </div>
       <div class="saved-mark" id="savedMark" hidden>✓ 保存した</div>
-      <label>置換表（音声入力が化けた語を直す。1行に「化けた語 → 正しい表記」）
-        <textarea class="dict" id="dict" spellcheck="false" placeholder="サブスタッフ → Substack&#10;根付 → 目付"></textarea>
-      </label>
       <div class="settings-note">
-        入力が1秒止まるたびに、この表のとおり置き換える。これもこのブラウザの中だけに保存される。
-        受け皿がv4以降なら、Driveの置換表を自動で読むので、ここに貼らなくてもよい（<span id="remoteDict">受け皿からはまだ読めていない</span>）。
+        置換表（音声入力が化けた語を直す表）は受け皿がDriveから自動で読み込む。<span id="remoteDict">受け皿からはまだ読めていない</span>
       </div>
-      <div class="saved-mark" id="dictMark" hidden>✓ 置換表を保存した（<span id="dictCount">0</span>件）</div>
       <label>消す口ぐせ（1行1語。空にすると消さない）
         <textarea class="dict" id="fillers" spellcheck="false"></textarea>
       </label>
@@ -427,9 +422,9 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-08 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-09-08 c";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
-  var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers", style: "jushinbo.style" };
+  var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
   var $ = function (id) { return document.getElementById(id); };
   var $date = $("date"), $text = $("text");
@@ -442,7 +437,6 @@ window.addEventListener("unhandledrejection", function (ev) {
   var SNS_STYLE = "これはSNS（note・Facebook・Instagram）に公開する文にする。文字数の制限はなく、要約もしない。ルール5と5bで直した人の名前を、そのまま出さずに一般化する。家族は「妻」「孫」「娘」「妹」等、教えている子は「教え子」「ジュニア」、それ以外の人は「仲間」「知人」「先生」「コーチ」等に置き換える。飼い犬は「ワンコ」。書き手本人の名義、サービス名・製品名、地名・施設名・大会名はそのまま出してよい。ハッシュタグ・絵文字は足さない。";
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = { hidden: true };
-  var $dict = $("dict"), $dictMark = $("dictMark"), $dictCount = $("dictCount");
   var $fillers = $("fillers"), $fillersMark = $("fillersMark"), $fillersCount = $("fillersCount");
   var $style = $("style"), $styleMark = $("styleMark");
   var $fixed = $("fixed"), $fixedLabel = $("fixedLabel"), $undo = $("undo");
@@ -524,16 +518,9 @@ window.addEventListener("unhandledrejection", function (ev) {
   }
   var remoteRules = [];
   function mergeRules() {
-    var seen = {}, all = [];
-    parseDict($dict.value).concat(remoteRules).forEach(function (r) {
-      if (seen[r[0]]) return; seen[r[0]] = 1; all.push(r);
-    });
-    all.sort(function (a, b) { return b[0].length - a[0].length; });
-    dictRules = all;
-    $dictCount.textContent = parseDict($dict.value).length;
+    dictRules = remoteRules.slice().sort(function (a, b) { return b[0].length - a[0].length; });
   }
   function loadDict() {
-    $dict.value = load(K.dict) || "";
     try { remoteRules = parseDict(load("jushinbo.dictRemote") || ""); } catch (e) { remoteRules = []; }
     if (remoteRules.length) $remoteDict.textContent = "前回読んだ " + remoteRules.length + " 件を使っている";
     mergeRules();
@@ -567,17 +554,6 @@ window.addEventListener("unhandledrejection", function (ev) {
       })
       .catch(function () { $remoteDict.textContent = "受け皿に届かなかった"; });
   }
-  function saveDict() {
-    store(K.dict, $dict.value);
-    mergeRules();
-    $dictMark.hidden = false;
-    clearTimeout(saveDict._t);
-    saveDict._t = setTimeout(function () { $dictMark.hidden = true; }, 2500);
-  }
-  ["input", "change", "blur", "paste"].forEach(function (ev) {
-    $dict.addEventListener(ev, function () { setTimeout(saveDict, 0); });
-  });
-
   function hideFixed() { $fixed.hidden = true; beforeFix = null; }
 
   // ---- 整え（口ぐせ・くり返し・全角・句読点） ----
