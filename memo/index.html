@@ -427,7 +427,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-08 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-09-08 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
@@ -540,7 +540,8 @@ window.addEventListener("unhandledrejection", function (ev) {
   }
   function fetchRecvVer() {
     if (!configured()) { $("recvVer").textContent = "未設定"; return; }
-    fetch($endpoint.value.trim(), { method: "GET", redirect: "follow" })
+    var url = $endpoint.value.trim() + "?_=" + Date.now();   // キャッシュ避け（古い置換表を掴んだままになる不具合の対策）
+    fetch(url, { method: "GET", redirect: "follow", cache: "no-store" })
       .then(function (r) { return r.text(); })
       .then(function (t) {
         var j = null; try { j = JSON.parse(t); } catch (e) {}
@@ -553,8 +554,8 @@ window.addEventListener("unhandledrejection", function (ev) {
   function fetchRemoteDict() {
     fetchRecvVer();
     if (!configured()) return;
-    var url = $endpoint.value.trim() + "?dict=1";
-    fetch(url, { method: "GET", redirect: "follow" })
+    var url = $endpoint.value.trim() + "?dict=1&_=" + Date.now();   // キャッシュ避け（同上）
+    fetch(url, { method: "GET", redirect: "follow", cache: "no-store" })
       .then(function (r) { return r.text(); })
       .then(function (t) {
         var j = null; try { j = JSON.parse(t); } catch (e) {}
