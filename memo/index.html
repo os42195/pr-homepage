@@ -239,6 +239,19 @@
     font-family: var(--mono);
   }
 
+  .photos { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumb {
+    position: relative; width: 64px; height: 64px;
+    border-radius: 8px; overflow: hidden; border: 1px solid var(--line);
+    flex: none; background: var(--surface-2);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb button {
+    position: absolute; top: -6px; right: -6px; width: 20px; height: 20px;
+    border-radius: 50%; border: none; background: var(--ai); color: #fff;
+    font-size: 13px; line-height: 1; cursor: pointer; padding: 0;
+  }
+
   details.settings {
     background: var(--surface); border: 1px solid var(--line);
     border-radius: 10px; padding: 0 14px;
@@ -326,8 +339,11 @@
     </div>
 
     <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。「送る」で受信簿へ。勝手には送らない。"></textarea>
+    <div class="photos" id="photos" hidden></div>
     <div class="under">
       <div class="under-left">
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+        <button class="ai" id="photoBtn" type="button" title="写真を選ぶ・撮る（複数可）">写真</button>
         <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">AI整形</button>
         <button class="ai" id="xpost" type="button" disabled title="X投稿用に140字へ。人名は一般化する">X140</button>
         <button class="ai" id="sns" type="button" disabled title="note・Facebook・Instagram用。文字数制限なし、人名を一般化">SNS</button>
@@ -411,7 +427,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-07 k";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-09-08 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
@@ -430,6 +446,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $fillers = $("fillers"), $fillersMark = $("fillersMark"), $fillersCount = $("fillersCount");
   var $style = $("style"), $styleMark = $("styleMark");
   var $fixed = $("fixed"), $fixedLabel = $("fixedLabel"), $undo = $("undo");
+  var $photoInput = $("photoInput"), $photoBtn = $("photoBtn"), $photos = $("photos");
 
   var sending = false;
   var tidying = false;     // AIで整えている最中
@@ -814,16 +831,76 @@ window.addEventListener("unhandledrejection", function (ev) {
   // ---- 入力欄を空にする（送らずに捨てる。「戻す」で復活できる） ----
   $clear.addEventListener("click", function () {
     var text = $text.value;
-    if (!text.trim()) return;
+    if (!text.trim() && !photos.length) return;
     clearTimeout(dictTimer);
     beforeFix = text;
     applyDict.last = null;
     $text.value = "";
     skipRules = {}; skipTidy = false;
+    clearPhotos();
     grow(); saveDraft(); armIdle();
     $fixedLabel.textContent = "入力欄を空にしたよ（受信簿には送ってない）";
     $fixed.hidden = false;
   });
+
+  // ---- 写真（選ぶ・撮る、複数可。「いま送る」で本文といっしょに送る） ----
+  // 選んだ写真はブラウザのメモリ上にだけ持つ（下書きのように保存はされない。閉じると消える）
+  var photos = [];   // { dataUrl, base64, mime }
+  var MAX_DIM = 1600, JPEG_Q = 0.82;
+
+  function compressImage(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = function () { reject(new Error("写真を読めなかった")); };
+      reader.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(new Error("写真を開けなかった")); };
+        img.onload = function () {
+          var scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+          var cw = Math.max(1, Math.round(img.width * scale));
+          var ch = Math.max(1, Math.round(img.height * scale));
+          var canvas = document.createElement("canvas");
+          canvas.width = cw; canvas.height = ch;
+          canvas.getContext("2d").drawImage(img, 0, 0, cw, ch);
+          var dataUrl = canvas.toDataURL("image/jpeg", JPEG_Q);
+          resolve({ dataUrl: dataUrl, mime: "image/jpeg", base64: dataUrl.split(",")[1] || "" });
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderPhotos() {
+    $photos.innerHTML = "";
+    photos.forEach(function (p, i) {
+      var d = document.createElement("div");
+      d.className = "thumb";
+      var img = document.createElement("img");
+      img.src = p.dataUrl; img.alt = "写真" + (i + 1);
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.setAttribute("aria-label", "この写真を外す"); btn.textContent = "×";
+      btn.addEventListener("click", function () { photos.splice(i, 1); renderPhotos(); updateButton(); armIdle(); });
+      d.appendChild(img); d.appendChild(btn);
+      $photos.appendChild(d);
+    });
+    $photos.hidden = !photos.length;
+  }
+  function clearPhotos() { photos = []; renderPhotos(); }
+
+  $photoBtn.addEventListener("click", function () { $photoInput.click(); });
+  $photoInput.addEventListener("change", function () {
+    var files = Array.prototype.slice.call($photoInput.files || []);
+    $photoInput.value = "";   // 同じ写真を続けて選べるようにする
+    if (!files.length) return;
+    Promise.all(files.map(function (f) {
+      return compressImage(f).catch(function (e) { say("写真を読み込めなかった：" + (e && e.message || "理由不明"), true); return null; });
+    })).then(function (results) {
+      results.forEach(function (r) { if (r) photos.push(r); });
+      renderPhotos(); saveDraft(); updateButton(); armIdle();
+    });
+  });
+
   loadDict();
   loadFillers();
   $style.value = load(K.style) || "";
@@ -860,19 +937,21 @@ window.addEventListener("unhandledrejection", function (ev) {
   function stopTimers() {}
 
   function updateButton() {
-    $sendNow.disabled = sending || !$text.value.trim();
-    $share.disabled = !$text.value.trim();
-    $copy.disabled = !$text.value.trim();
-    $clear.disabled = !$text.value.trim();
-    $ai.disabled = tidying || sending || !$text.value.trim();
-    $xpost.disabled = tidying || sending || !$text.value.trim();
-    $sns.disabled = tidying || sending || !$text.value.trim();
+    var hasText = !!$text.value.trim();
+    var hasAny = hasText || !!photos.length;
+    $sendNow.disabled = sending || !hasAny;
+    $share.disabled = !hasText;
+    $copy.disabled = !hasText;
+    $clear.disabled = !hasAny;
+    $ai.disabled = tidying || sending || !hasText;
+    $xpost.disabled = tidying || sending || !hasText;
+    $sns.disabled = tidying || sending || !hasText;
   }
 
   function armIdle() {
     stopTimers();
     updateButton();
-    var has = !!$text.value.trim();
+    var has = !!$text.value.trim() || !!photos.length;
     $unsent.hidden = !has;
     $sendNow.classList.toggle("urgent", has);
     document.title = (has ? "● " : "") + "受信簿ポスト";
@@ -932,12 +1011,12 @@ window.addEventListener("unhandledrejection", function (ev) {
     clearTimeout(dictTimer);
     applyDict(true);
     var text = $text.value.replace(/\s+$/, "");
-    if (!text.trim() || sending) return;
+    if ((!text.trim() && !photos.length) || sending) return;
     stopTimers();
 
-    // 同じ文を続けて送らない（二重送信よけ）
+    // 同じ文を続けて送らない（二重送信よけ。写真つきのときは毎回送る）
     var sig = ($date.value || todayStr()) + "\n" + text;
-    if (auto && sig === lastSig && Date.now() - lastSentAt < 120000) {
+    if (auto && !photos.length && sig === lastSig && Date.now() - lastSentAt < 120000) {
       mark("sent", "さっきと同じ文なので自動では送らなかった");
       toast("さっきと同じ文だよ。送るなら「いま送る」を押して");
       updateButton();
@@ -949,7 +1028,8 @@ window.addEventListener("unhandledrejection", function (ev) {
       date: $date.value || todayStr(),
       time: nowTime(),
       tag: "",
-      text: text
+      text: text,
+      photos: photos.map(function (p) { return { data: p.base64, mime: p.mime }; })
     };
 
     if (!configured()) { mark("error", "未設定"); checkReady(); return; }
@@ -965,6 +1045,7 @@ window.addEventListener("unhandledrejection", function (ev) {
         lastSentAt = Date.now();
         $text.value = ""; composing = false;
         skipRules = {}; skipTidy = false; hideFixed();
+        clearPhotos();
         saveDraft();
         $unsent.hidden = true;
         $sendNow.classList.remove("urgent");
@@ -987,7 +1068,8 @@ window.addEventListener("unhandledrejection", function (ev) {
     var url = $endpoint.value.trim();
     var body = JSON.stringify({
       date: payload.date, time: payload.time,
-      tag: payload.tag, text: payload.text
+      tag: payload.tag, text: payload.text,
+      photos: payload.photos || []
     });
     return fetch(url, {
       method: "POST",
