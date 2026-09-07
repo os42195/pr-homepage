@@ -226,6 +226,7 @@
   .xdraft .row { justify-content: space-between; }
   .xcount { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
   .xcount.over { color: var(--danger); font-weight: 600; }
+  .ver { font-family: var(--mono); font-size: 11px; color: var(--ink-3); text-align: center; letter-spacing: .04em; }
   .clear {
     font: 600 12.5px/1 var(--sans); color: var(--ink-3);
     background: none; border: 1px solid var(--line); border-radius: 999px;
@@ -388,6 +389,7 @@
     </div>
   </details>
 
+  <div class="ver" id="ver">ページ <span id="pageVer"></span> ／ 受け皿 <span id="recvVer">未確認</span></div>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -409,6 +411,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
+  var PAGE_VER = "2026-09-07 e";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
@@ -514,7 +517,19 @@ window.addEventListener("unhandledrejection", function (ev) {
     if (remoteRules.length) $remoteDict.textContent = "前回読んだ " + remoteRules.length + " 件を使っている";
     mergeRules();
   }
+  function fetchRecvVer() {
+    if (!configured()) { $("recvVer").textContent = "未設定"; return; }
+    fetch($endpoint.value.trim(), { method: "GET", redirect: "follow" })
+      .then(function (r) { return r.text(); })
+      .then(function (t) {
+        var j = null; try { j = JSON.parse(t); } catch (e) {}
+        var m = j && j.message && String(j.message).match(/v\d+/);
+        $("recvVer").textContent = m ? (m[0] + (j.tidy ? "（AI可）" : "（鍵なし）")) : "返事が読めない";
+      })
+      .catch(function () { $("recvVer").textContent = "届かない"; });
+  }
   function fetchRemoteDict() {
+    fetchRecvVer();
     if (!configured()) return;
     var url = $endpoint.value.trim() + "?dict=1";
     fetch(url, { method: "GET", redirect: "follow" })
@@ -1052,6 +1067,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   });
 
 
+  $("pageVer").textContent = PAGE_VER;
   checkReady();
   fetchRemoteDict();
   armIdle();
