@@ -330,6 +330,7 @@
       <div class="under-left">
         <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">AI整形</button>
         <button class="ai" id="xpost" type="button" disabled title="X投稿用に140字へ。人名は一般化する">X140</button>
+        <button class="ai" id="sns" type="button" disabled title="note・Facebook・Instagram用。文字数制限なし、人名を一般化">SNS</button>
       </div>
       <button class="clear" id="clear" type="button" disabled>空にする</button>
     </div>
@@ -337,7 +338,7 @@
 
   <section class="xdraft" id="xdraft" hidden>
     <div class="row">
-      <span class="eyebrow">X用</span>
+      <span class="eyebrow" id="xlabel">X用</span>
       <span class="xcount" id="xcount">0 / 140</span>
     </div>
     <textarea id="xtext" spellcheck="false" placeholder="ここにX用の文が出る。手で直してもいい。"></textarea>
@@ -410,7 +411,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-07 h";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-09-07 i";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", dict: "jushinbo.dict", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
@@ -418,7 +419,8 @@ window.addEventListener("unhandledrejection", function (ev) {
   var $date = $("date"), $text = $("text");
   var $status = $("status"), $toast = $("toast"), $saveState = $("saveState");
   var $saveLabel = $("saveLabel"), $sendNow = $("sendNow"), $share = $("share"), $copy = $("copy"), $clear = $("clear"), $ai = $("ai"), $remoteDict = $("remoteDict");
-  var $xpost = $("xpost"), $xdraft = $("xdraft"), $xtext = $("xtext"), $xcount = $("xcount"), $xcopy = $("xcopy"), $xclose = $("xclose");
+  var $xpost = $("xpost"), $xdraft = $("xdraft"), $xtext = $("xtext"), $xcount = $("xcount"), $xcopy = $("xcopy"), $xclose = $("xclose"), $sns = $("sns"), $xlabel = $("xlabel");
+  var SNS_STYLE = "これはSNS（note・Facebook・Instagram）に公開する文にする。文字数の制限はなく、要約もしない。ルール5と5bで直した人の名前を、そのまま出さずに一般化する。家族は「妻」「孫」「娘」「妹」等、教えている子は「教え子」「ジュニア」、それ以外の人は「仲間」「知人」「先生」「コーチ」等に置き換える。飼い犬は「うちの犬」。書き手本人の名義、サービス名・製品名、地名・施設名・大会名はそのまま出してよい。ハッシュタグ・絵文字は足さない。";
   var $endpoint = $("endpoint"), $settings = $("settings");
   var $unsent = { hidden: true };
   var $dict = $("dict"), $dictMark = $("dictMark"), $dictCount = $("dictCount");
@@ -760,20 +762,28 @@ window.addEventListener("unhandledrejection", function (ev) {
     if (!t) return;
     copyText(t).then(function (ok) { toast(ok ? "X用の文をコピーしたよ" : "コピーできなかった"); });
   });
-  $xpost.addEventListener("click", function () {
+  $xpost.addEventListener("click", function () { makeDraft("x"); });
+  $sns.addEventListener("click", function () { makeDraft("sns"); });
+  function makeDraft(kind) {
     if (tidying || sending) return;
+    var btn = (kind === "x") ? $xpost : $sns;
+    var idle = (kind === "x") ? "X140" : "SNS";
     clearTimeout(dictTimer);
     applyDict(true);
     var text = $text.value.replace(/\s+$/, "");
     if (!text.trim()) return;
     if (!configured()) { checkReady(); return; }
     tidying = true; updateButton();
-    $xpost.textContent = "作成中…";
+    btn.textContent = "作成中…";
     say("");
+    var order = ($style.value || "").trim();
+    var payload = (kind === "x")
+      ? { action: "tidy", mode: "x", text: text, style: order }
+      : { action: "tidy", text: text, style: SNS_STYLE + (order ? "\n" + order : "") };
     fetch($endpoint.value.trim(), {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "tidy", mode: "x", text: text, style: ($style.value || "").trim() }),
+      body: JSON.stringify(payload),
       redirect: "follow"
     }).then(function (r) { return r.text(); })
       .then(function (t) {
@@ -783,12 +793,14 @@ window.addEventListener("unhandledrejection", function (ev) {
         var outText = String(j.text || "").replace(/\s+$/, "");
         if (!outText) throw new Error("返ってきた文が空だった");
         $xtext.value = outText; updateXCount();
+        $xlabel.textContent = (kind === "x") ? "X用" : "SNS用";
+        $xcount.hidden = (kind !== "x");
         $xdraft.hidden = false;
         try { $xdraft.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
       })
-      .catch(function (e) { say("X用の文を作れなかった：" + (e && e.message || "理由不明"), true); })
-      .then(function () { tidying = false; $xpost.textContent = "X140"; updateButton(); armIdle(); });
-  });
+      .catch(function (e) { say((kind === "x" ? "X用" : "SNS用") + "の文を作れなかった：" + (e && e.message || "理由不明"), true); })
+      .then(function () { tidying = false; btn.textContent = idle; updateButton(); armIdle(); });
+  }
 
   // ---- 入力欄を空にする（送らずに捨てる。「戻す」で復活できる） ----
   $clear.addEventListener("click", function () {
@@ -845,6 +857,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     $clear.disabled = !$text.value.trim();
     $ai.disabled = tidying || sending || !$text.value.trim();
     $xpost.disabled = tidying || sending || !$text.value.trim();
+    $sns.disabled = tidying || sending || !$text.value.trim();
   }
 
   function armIdle() {
