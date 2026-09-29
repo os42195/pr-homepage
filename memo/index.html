@@ -422,7 +422,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-08 c";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-09-29 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style" };
 
@@ -815,6 +815,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     $text.value = "";
     skipRules = {}; skipTidy = false;
     clearPhotos();
+    $xdraft.hidden = true;
     grow(); saveDraft(); armIdle();
     $fixedLabel.textContent = "入力欄を空にしたよ（受信簿には送ってない）";
     $fixed.hidden = false;
@@ -1023,6 +1024,7 @@ window.addEventListener("unhandledrejection", function (ev) {
         $text.value = ""; composing = false;
         skipRules = {}; skipTidy = false; hideFixed();
         clearPhotos();
+        $xdraft.hidden = true;
         saveDraft();
         $unsent.hidden = true;
         $sendNow.classList.remove("urgent");
@@ -1071,9 +1073,12 @@ window.addEventListener("unhandledrejection", function (ev) {
 
 
   function grow() {
+    // 高さを測り直す一瞬に欄が縮み、iPhoneで画面がずれるので、位置を覚えて戻す（2026-09-29）
+    var y = window.scrollY;
     $text.style.height = "auto";
     var max = Math.round(window.innerHeight * 0.6);
     $text.style.height = Math.min($text.scrollHeight + 2, max) + "px";
+    if (window.scrollY !== y) window.scrollTo(0, y);
   }
   var imeGuard = null;
   function markComposing() {
