@@ -62,6 +62,8 @@
   }
 
   * { box-sizing: border-box; }
+  /* 「hidden」の枠を本当に隠す（display:flex の枠は hidden が効かず、X用の枠や「戻す」の帯が出しっぱなしだった。2026-10-02） */
+  [hidden] { display: none !important; }
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--paper);
@@ -239,6 +241,32 @@
     font-family: var(--mono);
   }
 
+  /* 記号・定型・辞書へ（2026-10-02、ぽちペタのカスタムキーに当たるもの） */
+  .keys { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; margin-top: -2px; }
+  .keys::-webkit-scrollbar { display: none; }
+  .key {
+    font: 600 14px/1 var(--sans); color: var(--ink-2);
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px;
+    min-width: 0; min-height: 36px; padding: 0 4px; flex: 1 1 0; cursor: pointer;
+  }
+  .key.act { color: var(--ai); border-color: var(--gold); font-size: 13px; flex: 0 0 auto; padding: 0 9px; }
+  .key:disabled { opacity: .4; cursor: default; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font: 13.5px/1.35 var(--sans); color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 12px; cursor: pointer; text-align: left; max-width: 100%;
+  }
+  .chip.add { color: var(--ai); border-color: var(--gold); font-weight: 600; }
+  .chips .settings-note { width: 100%; }
+  .hitem { border-top: 1px solid var(--line-soft); padding: 8px 0 4px; }
+  .hmeta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+  .htext {
+    font-size: 14px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .hbtns { display: flex; gap: 8px; margin-top: 6px; }
+
   .photos { display: flex; gap: 8px; flex-wrap: wrap; }
   .thumb {
     position: relative; width: 64px; height: 64px;
@@ -338,6 +366,18 @@
       </div>
     </div>
 
+    <div class="keys" id="keys" role="toolbar" aria-label="記号と道具">
+      <button class="key" type="button" data-open="「" data-close="」">「」</button>
+      <button class="key" type="button" data-open="（" data-close="）">（）</button>
+      <button class="key" type="button" data-open="【" data-close="】">【】</button>
+      <button class="key" type="button" data-open="・">・</button>
+      <button class="key" type="button" data-open="…">…</button>
+      <button class="key" type="button" data-open="〜">〜</button>
+      <button class="key act" type="button" id="teikeiBtn" aria-expanded="false">定型</button>
+      <button class="key act" type="button" id="dictBtn" title="化けた語を指でなぞって選んでから押す">辞書へ</button>
+    </div>
+    <div class="chips" id="teikei" hidden></div>
+
     <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。「送る」で受信簿へ。勝手には送らない。"></textarea>
     <div class="photos" id="photos" hidden></div>
     <div class="under">
@@ -347,6 +387,7 @@
         <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">AI整形</button>
         <button class="ai" id="xpost" type="button" disabled title="X投稿用に140字へ。人名は一般化する">X140</button>
         <button class="ai" id="sns" type="button" disabled title="note・Facebook・Instagram用。文字数制限なし、人名を一般化">SNS</button>
+        <button class="ai" id="histBtn" type="button" title="送った文・整える前の文を見返す（このスマホの中だけ）">履歴</button>
       </div>
       <button class="clear" id="clear" type="button" disabled>空にする</button>
     </div>
@@ -364,7 +405,13 @@
     </div>
   </section>
 
-
+  <section class="xdraft" id="hist" hidden>
+    <div class="row">
+      <span class="eyebrow">履歴（このブラウザの中だけ・新しい順に50件）</span>
+      <button class="clear" id="histClose" type="button">閉じる</button>
+    </div>
+    <div id="histList"></div>
+  </section>
 
   <details class="settings" id="settings">
     <summary>送り先の設定</summary>
@@ -386,6 +433,10 @@
       <div class="saved-mark" id="savedMark" hidden>✓ 保存した</div>
       <div class="settings-note">
         置換表（音声入力が化けた語を直す表）は受け皿がDriveから自動で読み込む。<span id="remoteDict">受け皿からはまだ読めていない</span>
+        化けた語は、入力欄で指でなぞって選んで「辞書へ」を押すと、その場で表に1行足せる。
+      </div>
+      <div class="settings-note">
+        定型文もDriveのファイルから自動で読む。<span id="teikeiCount">まだ読めていない</span>
       </div>
       <label>消す口ぐせ（1行1語。空にすると消さない）
         <textarea class="dict" id="fillers" spellcheck="false"></textarea>
@@ -422,9 +473,9 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-09-29 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-02 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
-  var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style" };
+  var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
   var $ = function (id) { return document.getElementById(id); };
   var $date = $("date"), $text = $("text");
@@ -551,6 +602,7 @@ window.addEventListener("unhandledrejection", function (ev) {
         store("jushinbo.dictRemote", j.dict);
         mergeRules();
         $remoteDict.textContent = "受け皿から " + remoteRules.length + " 件を自動で読んだ";
+        if (typeof j.teikei === "string") { store(K.teikei, j.teikei); loadTeikei(j.teikei, true); }
       })
       .catch(function () { $remoteDict.textContent = "受け皿に届かなかった"; });
   }
@@ -725,6 +777,7 @@ window.addEventListener("unhandledrejection", function (ev) {
         var outText = String(j.text || "").replace(/\s+$/, "");
         if (!outText) throw new Error("返ってきた文が空だった");
         if (outText === text) { toast("直すところは無かったよ"); return; }
+        histAdd("AI整形の前", text);
         beforeFix = text;
         applyDict.last = null;
         $text.value = outText;
@@ -810,6 +863,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     var text = $text.value;
     if (!text.trim() && !photos.length) return;
     clearTimeout(dictTimer);
+    histAdd("空にした", text);
     beforeFix = text;
     applyDict.last = null;
     $text.value = "";
@@ -878,6 +932,216 @@ window.addEventListener("unhandledrejection", function (ev) {
       renderPhotos(); saveDraft(); updateButton(); armIdle();
     });
   });
+
+  // ---- 記号キー・定型文・辞書へ・履歴（2026-10-02、ぽちペタのカスタムキー・定型文・辞書登録・履歴に当たるもの） ----
+  var $keys = $("keys"), $teikei = $("teikei"), $teikeiBtn = $("teikeiBtn"), $dictBtn = $("dictBtn"), $teikeiCount = $("teikeiCount");
+  var $hist = $("hist"), $histList = $("histList"), $histBtn = $("histBtn"), $histClose = $("histClose");
+
+  // ボタンを押すと入力欄から外れるので、最後のカーソル位置・選んだ範囲を覚えておく
+  var lastSel = { s: 0, e: 0 };
+  function rememberSel() { try { lastSel = { s: $text.selectionStart, e: $text.selectionEnd }; } catch (e) {} }
+  ["select", "keyup", "click", "input", "focus"].forEach(function (ev) { $text.addEventListener(ev, rememberSel); });
+  document.addEventListener("selectionchange", function () { if (document.activeElement === $text) rememberSel(); });
+  // パソコンでは押した瞬間に入力欄から外れないようにする
+  [$keys, $teikei].forEach(function (el) {
+    el.addEventListener("mousedown", function (e) { if (e.target.closest && e.target.closest("button")) e.preventDefault(); });
+  });
+
+  function curSel() {
+    var n = $text.value.length;
+    var s = Math.min(lastSel.s, n), e = Math.min(lastSel.e, n);
+    return s <= e ? { s: s, e: e } : { s: e, e: s };
+  }
+  // カーソルの所に入れる。かっこは選んだ文を囲み、何も選んでいなければ中にカーソルを置く
+  function insertAtCursor(open, close) {
+    var v = $text.value, r = curSel();
+    var mid = v.slice(r.s, r.e);
+    var ins = open + mid + (close || "");
+    $text.value = v.slice(0, r.s) + ins + v.slice(r.e);
+    var caret = (close && !mid) ? r.s + open.length : r.s + ins.length;
+    try { $text.focus(); $text.setSelectionRange(caret, caret); } catch (e) {}
+    lastSel = { s: caret, e: caret };
+    grow(); saveDraft(); armIdle(); scheduleDict();
+  }
+  $keys.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("button[data-open]");
+    if (!b) return;
+    insertAtCursor(b.getAttribute("data-open"), b.getAttribute("data-close") || "");
+  });
+
+  // 受け皿に頼みごとを送る（辞書登録・定型文の追加）
+  function postAction(obj) {
+    return fetch($endpoint.value.trim(), {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(obj),
+      redirect: "follow"
+    }).then(function (r) { return r.text(); })
+      .then(function (t) {
+        var j = null; try { j = JSON.parse(t); } catch (e) {}
+        if (!j) throw new Error("受け皿の返事が読めなかった");
+        if (!j.ok) throw new Error(j.error || "受け皿が断った");
+        return j;
+      });
+  }
+  function needV10() {
+    if (!configured()) { checkReady(); return true; }
+    if (recvVerNum && recvVerNum < 10) { say("受け皿がv" + recvVerNum + "のまま。辞書登録と定型文の追加は、受け皿をv10に更新してから使えるよ。", true); return true; }
+    return false;
+  }
+
+  // 定型文（Driveの「受信簿ポスト_定型文.txt」が正本。受け皿が置換表といっしょに返す）
+  var teikeiList = [];
+  function loadTeikei(src, fromRemote) {
+    teikeiList = String(src || "").split(/\r?\n/).map(function (l) { return l.trim(); })
+      .filter(function (l) { return l && l.charAt(0) !== "#"; });
+    if (fromRemote) $teikeiCount.textContent = "受け皿から " + teikeiList.length + " 件を自動で読んだ";
+    else if (teikeiList.length) $teikeiCount.textContent = "前回読んだ " + teikeiList.length + " 件を使っている";
+    if (!$teikei.hidden) renderTeikei();
+  }
+  function renderTeikei() {
+    $teikei.innerHTML = "";
+    teikeiList.forEach(function (t) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.textContent = t;
+      b.addEventListener("click", function () { insertAtCursor(t, ""); showTeikei(false); });
+      $teikei.appendChild(b);
+    });
+    if (!teikeiList.length) {
+      var note = document.createElement("div");
+      note.className = "settings-note";
+      note.textContent = "定型文はまだ無い。下の「＋足す」か、右腕AIに「定型文に◯◯を足して」で増える。";
+      $teikei.appendChild(note);
+    }
+    var add = document.createElement("button");
+    add.type = "button"; add.className = "chip add"; add.textContent = "＋足す";
+    add.addEventListener("click", addTeikei);
+    $teikei.appendChild(add);
+  }
+  function showTeikei(on) {
+    $teikei.hidden = !on;
+    $teikeiBtn.setAttribute("aria-expanded", on ? "true" : "false");
+    if (on) renderTeikei();
+  }
+  $teikeiBtn.addEventListener("click", function () { showTeikei($teikei.hidden); });
+  function addTeikei() {
+    if (needV10()) return;
+    var r = curSel();
+    var t = prompt("定型文に足す文（1行）", $text.value.slice(r.s, r.e).trim());
+    if (t === null) return;
+    t = t.replace(/\s+/g, " ").trim();
+    if (!t) return;
+    if (teikeiList.indexOf(t) >= 0) { toast("もう定型文にあるよ"); return; }
+    postAction({ action: "addTeikei", text: t }).then(function () {
+      teikeiList.push(t);
+      store(K.teikei, teikeiList.join("\n"));
+      $teikeiCount.textContent = "受け皿から " + teikeiList.length + " 件を自動で読んだ";
+      renderTeikei();
+      toast("定型文に足したよ");
+    }).catch(function (e) { say("定型文に足せなかった：" + (e && e.message || "理由不明"), true); });
+  }
+  loadTeikei(load(K.teikei) || "", false);
+
+  // 辞書へ（選んだ化けた語を、Driveの置換表に1行足す。すでにある語の書き換えはしない）
+  $dictBtn.addEventListener("click", function () {
+    var r = curSel();
+    var from = $text.value.slice(r.s, r.e).trim();
+    if (!from) { toast("化けた語を指でなぞって選んでから押してね"); return; }
+    if (from.length > 30 || /\n/.test(from)) { toast("選ぶのは1語だけにしてね"); return; }
+    if (needV10()) return;
+    for (var i = 0; i < remoteRules.length; i++) {
+      if (remoteRules[i][0] === from) { toast("もう辞書にあるよ：" + from + "→" + remoteRules[i][1]); return; }
+    }
+    var to = prompt("「" + from + "」は、正しくは？\n（辞書に1行足して、これから自動で直す）", "");
+    if (to === null) return;
+    to = to.replace(/\s+/g, " ").trim();
+    if (!to || to === from) return;
+    if (to.indexOf(from) >= 0) {
+      say("「" + to + "」の中に「" + from + "」が入っていると、直すたびに増えてしまうので登録できない。もう少し長く選び直してね。", true);
+      return;
+    }
+    $dictBtn.disabled = true; $dictBtn.textContent = "登録中…";
+    postAction({ action: "addDict", from: from, to: to }).then(function () {
+      remoteRules.push([from, to]);
+      store("jushinbo.dictRemote", (load("jushinbo.dictRemote") || "") + "\n" + from + " → " + to);
+      mergeRules();
+      $remoteDict.textContent = "受け皿から " + remoteRules.length + " 件を自動で読んだ";
+      delete skipRules[from];
+      var before = $text.value, after = before.split(from).join(to);
+      if (after !== before) {
+        beforeFix = before; applyDict.last = null;
+        $text.value = after;
+        grow(); saveDraft(); armIdle();
+        $fixedLabel.innerHTML = "辞書に登録して直したよ: <b>" + esc(from) + "</b>→<b>" + esc(to) + "</b>";
+        $fixed.hidden = false;
+      } else {
+        toast("辞書に登録したよ：" + from + "→" + to);
+      }
+    }).catch(function (e) {
+      say("辞書に登録できなかった：" + (e && e.message || "理由不明"), true);
+    }).then(function () { $dictBtn.disabled = false; $dictBtn.textContent = "辞書へ"; });
+  });
+
+  // 履歴（送った文・AI整形の前・空にした文。このブラウザの中だけに新しい順で50件）
+  var HIST_MAX = 50;
+  function histLoad() { try { var h = JSON.parse(load(K.hist) || "[]"); return Array.isArray(h) ? h : []; } catch (e) { return []; } }
+  function histAdd(kind, text) {
+    text = String(text || "").replace(/\s+$/, "");
+    if (!text.trim()) return;
+    var h = histLoad();
+    if (h[0] && h[0].x === text) return;   // 同じ文を続けて残さない
+    var d = new Date();
+    h.unshift({ t: (d.getMonth() + 1) + "/" + d.getDate() + " " + nowTime(), k: kind, x: text });
+    if (h.length > HIST_MAX) h.length = HIST_MAX;
+    store(K.hist, JSON.stringify(h));
+    if (!$hist.hidden) renderHist();
+  }
+  function renderHist() {
+    var h = histLoad();
+    $histList.innerHTML = "";
+    if (!h.length) {
+      var none = document.createElement("div");
+      none.className = "settings-note"; none.textContent = "まだ履歴はない。送った文・AI整形の前の文・空にした文がここに残る。";
+      $histList.appendChild(none);
+      return;
+    }
+    h.forEach(function (it) {
+      var box = document.createElement("div"); box.className = "hitem";
+      var meta = document.createElement("div"); meta.className = "hmeta"; meta.textContent = it.t + "　" + it.k;
+      var tx = document.createElement("div"); tx.className = "htext"; tx.textContent = it.x;
+      var btns = document.createElement("div"); btns.className = "hbtns";
+      var back = document.createElement("button"); back.type = "button"; back.className = "share"; back.textContent = "入力欄へ";
+      back.addEventListener("click", function () { histRestore(it.x); });
+      var cp = document.createElement("button"); cp.type = "button"; cp.className = "clear"; cp.textContent = "コピー";
+      cp.addEventListener("click", function () { copyText(it.x).then(function (ok) { toast(ok ? "コピーしたよ" : "コピーできなかった"); }); });
+      btns.appendChild(back); btns.appendChild(cp);
+      box.appendChild(meta); box.appendChild(tx); box.appendChild(btns);
+      $histList.appendChild(box);
+    });
+  }
+  function histRestore(x) {
+    var cur = $text.value;
+    if (cur.trim() && cur.replace(/\s+$/, "") !== x) {
+      if (!confirm("いま入力欄にある文と入れ替える？（いまの文も履歴に残すよ）")) return;
+      histAdd("入れ替えた前", cur);
+    }
+    clearTimeout(dictTimer);
+    beforeFix = cur; applyDict.last = null;
+    $text.value = x;
+    grow(); saveDraft(); armIdle();
+    $fixedLabel.textContent = "履歴から入力欄に戻したよ（受信簿にはまだ送ってない）";
+    $fixed.hidden = false;
+    $hist.hidden = true;
+    try { window.scrollTo(0, 0); $text.focus(); } catch (e) {}
+  }
+  $histBtn.addEventListener("click", function () {
+    $hist.hidden = !$hist.hidden;
+    if (!$hist.hidden) {
+      renderHist();
+      try { $hist.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+    }
+  });
+  $histClose.addEventListener("click", function () { $hist.hidden = true; });
 
   loadDict();
   loadFillers();
@@ -1019,6 +1283,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     postIt(payload).then(function (res) {
       sending = false; updateButton();
       if (res.ok) {
+        histAdd("送った", payload.text);
         lastSig = payload.date + "\n" + payload.text;
         lastSentAt = Date.now();
         $text.value = ""; composing = false;
