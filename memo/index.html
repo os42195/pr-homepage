@@ -251,6 +251,9 @@
   }
   .key.act { color: var(--ai); border-color: var(--gold); font-size: 13px; flex: 0 0 auto; padding: 0 9px; }
   .key:disabled { opacity: .4; cursor: default; }
+  .ai.rec { color: #fff; background: var(--ai); border-color: var(--ai); font-variant-numeric: tabular-nums; }
+  :root[data-theme="dark"] .ai.rec { color: #1a100d; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ai.rec { color: #1a100d; } }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
     font: 13.5px/1.35 var(--sans); color: var(--ink);
@@ -383,6 +386,7 @@
     <div class="under">
       <div class="under-left">
         <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+        <button class="ai" id="recBtn" type="button" title="押して話す。もう一回押すと止めて、AIが文字にする（最長5分）">録音</button>
         <button class="ai" id="photoBtn" type="button" title="写真を選ぶ・撮る（複数可）">写真</button>
         <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">AI整形</button>
         <button class="ai" id="xpost" type="button" disabled title="X投稿用に140字へ。人名は一般化する">X140</button>
@@ -473,7 +477,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-02 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-02 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
@@ -602,7 +606,8 @@ window.addEventListener("unhandledrejection", function (ev) {
         store("jushinbo.dictRemote", j.dict);
         mergeRules();
         $remoteDict.textContent = "受け皿から " + remoteRules.length + " 件を自動で読んだ";
-        if (typeof j.teikei === "string") { store(K.teikei, j.teikei); loadTeikei(j.teikei, true); }
+        if (j.teikeiError) $teikeiCount.textContent = "受け皿が定型文を読めなかった：" + j.teikeiError;
+        else if (typeof j.teikei === "string") { store(K.teikei, j.teikei); loadTeikei(j.teikei, true); }
       })
       .catch(function () { $remoteDict.textContent = "受け皿に届かなかった"; });
   }
@@ -1010,7 +1015,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     if (!teikeiList.length) {
       var note = document.createElement("div");
       note.className = "settings-note";
-      note.textContent = "定型文はまだ無い。下の「＋足す」か、右腕AIに「定型文に◯◯を足して」で増える。";
+      note.textContent = /読めなかった/.test($teikeiCount.textContent) ? $teikeiCount.textContent : "定型文はまだ無い。下の「＋足す」か、右腕AIに「定型文に◯◯を足して」で増える。";
       $teikei.appendChild(note);
     }
     var add = document.createElement("button");
@@ -1143,6 +1148,122 @@ window.addEventListener("unhandledrejection", function (ev) {
   });
   $histClose.addEventListener("click", function () { $hist.hidden = true; });
 
+  // ---- 録音（2026-10-02、段階2。声を受け皿→Geminiに渡して文字にする。押したときだけ） ----
+  // 声はそのままGeminiの無料枠に渡る（2026-10-02 本人決定）。録音はページを閉じるまでメモリにだけ残す
+  var $recBtn = $("recBtn");
+  var REC_MAX_SEC = 300, REC_RATE = 16000;
+  var recState = null;       // 録音中: { ctx, src, proc, stream, chunks, len, rate, t0, timer }
+  var pendingAudio = null;   // 送れなかった録音（送り直し用）
+
+  function recLabel() {
+    if (recState) {
+      var sec = Math.floor((Date.now() - recState.t0) / 1000);
+      $recBtn.textContent = "■ 止める " + Math.floor(sec / 60) + ":" + pad(sec % 60);
+      if (sec >= REC_MAX_SEC) stopRec();
+    } else {
+      $recBtn.textContent = pendingAudio ? "録音を送り直す" : "録音";
+    }
+  }
+  function startRec() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { say("このブラウザでは録音できない。", true); return; }
+    if (!configured()) { checkReady(); return; }
+    if (recvVerNum && recvVerNum < 11) { say("受け皿がv" + recvVerNum + "のまま。録音は、受け皿をv11に更新してから使えるよ。", true); return; }
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { say("このブラウザでは録音できない。", true); return; }
+    var ctx = new AC();   // iPhoneは押した瞬間に作らないと音が止まったままになる
+    try { ctx.resume(); } catch (e) {}
+    say("");
+    navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
+      var src = ctx.createMediaStreamSource(stream);
+      var proc = ctx.createScriptProcessor(4096, 1, 1);
+      var r = { ctx: ctx, src: src, proc: proc, stream: stream, chunks: [], len: 0, rate: ctx.sampleRate, t0: Date.now() };
+      proc.onaudioprocess = function (e) {
+        var d = e.inputBuffer.getChannelData(0);
+        r.chunks.push(new Float32Array(d)); r.len += d.length;
+      };
+      src.connect(proc); proc.connect(ctx.destination);
+      recState = r;
+      $recBtn.classList.add("rec"); $recBtn.disabled = false;
+      r.timer = setInterval(recLabel, 500);
+      recLabel();
+      mark("draft", "録音中");
+    }).catch(function (e) {
+      try { ctx.close(); } catch (er) {}
+      say("マイクを使えなかった：" + (e && e.message || "理由不明") + "。iPhoneなら「設定」→「Safari」→「マイク」で許可してね。", true);
+    });
+  }
+  function stopRec() {
+    var r = recState;
+    if (!r) return;
+    recState = null;
+    clearInterval(r.timer);
+    try { r.src.disconnect(); r.proc.disconnect(); } catch (e) {}
+    try { r.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+    try { r.ctx.close(); } catch (e) {}
+    $recBtn.classList.remove("rec");
+    if (r.len < r.rate * 0.8) { recLabel(); armIdle(); toast("短すぎたので送らなかったよ"); return; }
+    sendAudio(toWavBlob(r.chunks, r.len, r.rate));
+  }
+  // 16kHz・1チャンネルのWAVにする（1分でおよそ2MB）
+  function toWavBlob(chunks, len, rate) {
+    var all = new Float32Array(len), o = 0;
+    chunks.forEach(function (c) { all.set(c, o); o += c.length; });
+    var ratio = rate / REC_RATE, n = Math.floor(len / ratio);
+    var view = new DataView(new ArrayBuffer(44 + n * 2));
+    function str(off, t) { for (var i = 0; i < t.length; i++) view.setUint8(off + i, t.charCodeAt(i)); }
+    str(0, "RIFF"); view.setUint32(4, 36 + n * 2, true); str(8, "WAVE");
+    str(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, REC_RATE, true); view.setUint32(28, REC_RATE * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    str(36, "data"); view.setUint32(40, n * 2, true);
+    for (var i = 0; i < n; i++) {
+      var s = Math.floor(i * ratio), e = Math.max(s + 1, Math.min(len, Math.floor((i + 1) * ratio))), sum = 0;
+      for (var j = s; j < e; j++) sum += all[j];
+      var v = Math.max(-1, Math.min(1, sum / (e - s)));
+      view.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true);
+    }
+    return new Blob([view], { type: "audio/wav" });
+  }
+  function blobToBase64(blob) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onerror = function () { reject(new Error("録音を読めなかった")); };
+      fr.onload = function () { resolve(String(fr.result).split(",")[1] || ""); };
+      fr.readAsDataURL(blob);
+    });
+  }
+  function sendAudio(blob) {
+    tidying = true; updateButton();
+    $recBtn.disabled = true; $recBtn.textContent = "文字にしている…";
+    mark("sending", "文字にしている…");
+    blobToBase64(blob).then(function (b64) {
+      return postAction({ action: "transcribe", audio: b64, mime: "audio/wav", style: ($style.value || "").trim() });
+    }).then(function (j) {
+      var t = String(j.text || "").replace(/^\s+|\s+$/g, "");
+      if (!t) throw new Error("声が聞き取れなかった");
+      pendingAudio = null;
+      var v = $text.value, r = curSel();
+      var pre = (r.s > 0 && !/\n$/.test(v.slice(0, r.s))) ? "\n" : "";
+      insertAtCursor(pre + t, "");
+      histAdd("録音", t);
+      toast("録音を文字にしたよ。受信簿にはまだ送ってない");
+    }).catch(function (e) {
+      pendingAudio = blob;
+      say("録音を文字にできなかった：" + (e && e.message || "理由不明") + "。録音は残してあるから、通信を確かめて「録音を送り直す」を押してね（ページを閉じると消える）。", true);
+    }).then(function () {
+      tidying = false; $recBtn.disabled = false;
+      recLabel(); updateButton(); armIdle();
+    });
+  }
+  $recBtn.addEventListener("click", function () {
+    if (recState) { stopRec(); return; }
+    if (tidying || sending) return;
+    if (pendingAudio) {
+      if (confirm("さっきの録音を送り直す？（「キャンセル」で、さっきのは捨てて新しく録音する）")) { sendAudio(pendingAudio); return; }
+      pendingAudio = null; recLabel();
+    }
+    startRec();
+  });
+
   loadDict();
   loadFillers();
   $style.value = load(K.style) || "";
@@ -1186,6 +1307,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     $copy.disabled = !hasText;
     $clear.disabled = !hasAny;
     $ai.disabled = tidying || sending || !hasText;
+    if (!recState) $recBtn.disabled = tidying || sending;
     $xpost.disabled = tidying || sending || !hasText;
     $sns.disabled = tidying || sending || !hasText;
   }
