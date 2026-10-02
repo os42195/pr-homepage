@@ -251,9 +251,18 @@
   }
   .key.act { color: var(--ai); border-color: var(--gold); font-size: 13px; flex: 0 0 auto; padding: 0 9px; }
   .key:disabled { opacity: .4; cursor: default; }
-  .ai.rec { color: #fff; background: var(--ai); border-color: var(--ai); font-variant-numeric: tabular-nums; }
-  :root[data-theme="dark"] .ai.rec { color: #1a100d; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ai.rec { color: #1a100d; } }
+  /* 録音は大きく（2026-10-02 本人指示） */
+  .recbig {
+    width: 100%; min-height: 56px; cursor: pointer;
+    font: 700 18px/1 var(--sans); letter-spacing: .04em;
+    color: var(--ai); background: var(--ai-soft);
+    border: 2px solid var(--ai); border-radius: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .recbig:disabled { opacity: .45; cursor: default; }
+  .recbig.rec { color: #fff; background: var(--ai); }
+  :root[data-theme="dark"] .recbig.rec { color: #1a100d; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .recbig.rec { color: #1a100d; } }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
     font: 13.5px/1.35 var(--sans); color: var(--ink);
@@ -382,11 +391,11 @@
     <div class="chips" id="teikei" hidden></div>
 
     <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。「送る」で受信簿へ。勝手には送らない。"></textarea>
+    <button class="recbig" id="recBtn" type="button" title="押して話す。もう一回押すと止めて、AIが文字にする（最長5分）">🎤 録音</button>
     <div class="photos" id="photos" hidden></div>
     <div class="under">
       <div class="under-left">
         <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
-        <button class="ai" id="recBtn" type="button" title="押して話す。もう一回押すと止めて、AIが文字にする（最長5分）">録音</button>
         <button class="ai" id="photoBtn" type="button" title="写真を選ぶ・撮る（複数可）">写真</button>
         <button class="ai" id="ai" type="button" disabled title="口ぐせ・言い直し・固有名詞をAIで整える">AI整形</button>
         <button class="ai" id="xpost" type="button" disabled title="X投稿用に140字へ。人名は一般化する">X140</button>
@@ -477,7 +486,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-02 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-02 c";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
@@ -1161,7 +1170,7 @@ window.addEventListener("unhandledrejection", function (ev) {
       $recBtn.textContent = "■ 止める " + Math.floor(sec / 60) + ":" + pad(sec % 60);
       if (sec >= REC_MAX_SEC) stopRec();
     } else {
-      $recBtn.textContent = pendingAudio ? "録音を送り直す" : "録音";
+      $recBtn.textContent = pendingAudio ? "🎤 録音を送り直す" : "🎤 録音";
     }
   }
   function startRec() {
