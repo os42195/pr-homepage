@@ -215,14 +215,40 @@
 
         .grid-4 {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
         }
 
         .flow-step {
-            font-size: 0.85rem;
+            font-size: 15.2px;
             font-weight: 700;
             color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-list {
+            max-width: 760px;
+            margin: 3rem auto 0;
+        }
+
+        .flow-list .flow-item {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 1.5rem;
+            padding: 1.75rem 0;
+            border-top: 1px solid rgba(42, 67, 92, 0.12);
+        }
+
+        .flow-list .flow-item:last-child {
+            border-bottom: 1px solid rgba(42, 67, 92, 0.12);
+        }
+
+        .flow-list .card-icon {
+            margin-bottom: 0;
+        }
+
+        .flow-list h3 {
+            font-size: 20px;
             margin-bottom: 0.5rem;
         }
 
@@ -1294,6 +1320,11 @@
                     AIに任せるのは、整理と下準備まで。何をやるか、何を出すかは、自分で決めています。<br>
                     体力に波がある60代でも、段取りが止まらないようにするための仕組みです。
                 </p>
+
+                <div class="text-center" style="margin-top:2.5rem;">
+                    <p class="paragraph">60代の暮らしがどう変わっていくかは、毎朝Substackに書いています。<br>毎朝ひとつ、「まだやれる」を届けます。</p>
+                    <a href="https://jijjiokinawa.substack.com/subscribe" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:1rem;">Substackで無料購読する</a>
+                </div>
             </div>
         </section>
 
@@ -1307,30 +1338,37 @@
                     </p>
                 </div>
 
-                <div class="grid-4 mt-4">
-                    <div class="card glass-card reveal">
+                <div class="flow-list">
+                    <div class="flow-item reveal">
                         <div class="card-icon"><i data-lucide="camera"></i></div>
+                        <div>
                         <p class="flow-step">1　予定</p>
                         <h3>日程表は写真で渡す</h3>
                         <p class="card-text">紙の日程表を撮って送ると、AIが日付と会場を読み取って、カレンダーに入れます。1件ずつ打ち込む手間がなくなりました。</p>
+                        </div>
                     </div>
 
-                    <div class="card glass-card reveal">
+                    <div class="flow-item reveal">
                         <div class="card-icon"><i data-lucide="mic"></i></div>
+                        <div>
                         <p class="flow-step">2　試合</p>
                         <h3>試合のあとは話すだけ</h3>
                         <p class="card-text">帰り道に「試合メモ」と話しかけると、スコアと気づきが試合の記録に入ります。相手ごとの対策ノートにも、次に向けた一言が足されます。</p>
+                        </div>
                     </div>
 
-                    <div class="card glass-card reveal">
+                    <div class="flow-item reveal">
                         <div class="card-icon"><i data-lucide="trophy"></i></div>
+                        <div>
                         <p class="flow-step">3　大会</p>
                         <h3>1つの大会を1ページに</h3>
                         <p class="card-text">ドローが出たら、大会ごとにページを作ります。わたしの試合も、教え子の結果も、同じページで見られます。</p>
+                        </div>
                     </div>
 
-                    <div class="card glass-card reveal">
+                    <div class="flow-item reveal">
                         <div class="card-icon"><i data-lucide="repeat"></i></div>
+                        <div>
                         <p class="flow-step">4　共有</p>
                         <h3>コーチや親御さんと共有する</h3>
                         <p class="card-text">記録から見えた課題を、AIが見やすい形にまとめます。一緒に教えるコーチや親御さんと同じものを見ながら、次の練習を決めています。</p>
