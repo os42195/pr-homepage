@@ -213,6 +213,24 @@
             gap: 2.5rem;
         }
 
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .flow-step {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-note {
+            max-width: 720px;
+            margin: 3rem auto 0;
+        }
+
         /* Glassmorphism Base Card */
         .glass-card {
             background: var(--glass-bg);
@@ -934,7 +952,8 @@
                 right: -1rem;
             }
             
-            .grid-3 {
+            .grid-3,
+            .grid-4 {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
@@ -969,7 +988,8 @@
                 width: 100%;
             }
             
-            .grid-3 {
+            .grid-3,
+            .grid-4 {
                 grid-template-columns: 1fr;
             }
 
@@ -1227,6 +1247,53 @@
                         </a>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Daily Flow Section -->
+        <section id="daily-flow" class="section">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="section-title">歩いて話すだけで、<span style="display:inline-block;">1日の段取りが決まる</span></h2>
+                    <p class="section-description">
+                        朝、愛犬とウォーキングしながら、思いついたことをスマホに話しかけます。そこから先の整理は、AIの仕事です。
+                    </p>
+                </div>
+
+                <div class="grid-4 mt-4">
+                    <div class="card glass-card reveal">
+                        <div class="card-icon"><i data-lucide="footprints"></i></div>
+                        <p class="flow-step">1　朝</p>
+                        <h3>歩きながら話す</h3>
+                        <p class="card-text">愛犬と歩きながら、気づいたことや「やらなきゃ」をスマホに声で残します。メモを書く手間はありません。</p>
+                    </div>
+
+                    <div class="card glass-card reveal">
+                        <div class="card-icon"><i data-lucide="list-checks"></i></div>
+                        <p class="flow-step">2　帰宅後</p>
+                        <h3>AIが仕分ける</h3>
+                        <p class="card-text">帰ってから「書いたよ」とひと言送ると、AIが「日記」「やること」「いつかやりたいこと」に分けて、Notionの表に入れます。日付があるものは、カレンダーにも入ります。</p>
+                    </div>
+
+                    <div class="card glass-card reveal">
+                        <div class="card-icon"><i data-lucide="moon"></i></div>
+                        <p class="flow-step">3　深夜</p>
+                        <h3>案件は夜のうちに進む</h3>
+                        <p class="card-text">1回で終わらない仕事は「案件」として表に並べています。調べものなど任せられる部分は、寝ているあいだにAIが1つ進めておきます。</p>
+                    </div>
+
+                    <div class="card glass-card reveal">
+                        <div class="card-icon"><i data-lucide="sunrise"></i></div>
+                        <p class="flow-step">4　翌朝</p>
+                        <h3>朝、今日の1つを決める</h3>
+                        <p class="card-text">朝4時、AIが前の日を4行の日記にまとめます。そして期限が来たものから、今日いちばん大事なことを1つ選んで出してきます。決めるのは、わたしです。</p>
+                    </div>
+                </div>
+
+                <p class="paragraph text-center flow-note">
+                    AIに任せるのは、整理と下準備まで。何をやるか、何を出すかは、自分で決めています。<br>
+                    体力に波がある60代でも、段取りが止まらないようにするための仕組みです。
+                </p>
             </div>
         </section>
 
