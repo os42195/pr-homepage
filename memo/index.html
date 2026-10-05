@@ -259,8 +259,9 @@
     border: 2px solid var(--ai); border-radius: 12px;
     font-variant-numeric: tabular-nums;
   }
-  /* 録音は上に置いて画面の上端に貼り付く（キーボードに隠れないように。2026-10-05 本人指示） */
-  .recbig { position: -webkit-sticky; position: sticky; top: 6px; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+  /* 録音は上に置き、見えている範囲から外れたら上端に浮かせる（キーボードに隠れないように。2026-10-05 本人指示。
+     iPhoneはキーボードで見えている範囲がずれ、sticky では浮かなかったので visualViewport で置き直す） */
+  .recbig.float { position: fixed; z-index: 50; box-shadow: 0 3px 10px rgba(0,0,0,.18); }
   .recbig:disabled { opacity: .45; cursor: default; }
   .recbig.rec { color: #fff; background: var(--ai); }
   :root[data-theme="dark"] .recbig.rec { color: #1a100d; }
@@ -489,7 +490,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-05 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-05 c";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
@@ -1189,6 +1190,38 @@ window.addEventListener("unhandledrejection", function (ev) {
   }
   document.addEventListener("visibilitychange", function () { if (document.hidden) releaseMic(); });
   window.addEventListener("pagehide", releaseMic);
+
+  // ---- 録音ボタンを浮かせる（2026-10-05 c） ----
+  (function () {
+    var spot = document.createElement("div");
+    $recBtn.parentNode.insertBefore(spot, $recBtn);
+    var vv = window.visualViewport;
+    var ticking = false;
+    function place() {
+      ticking = false;
+      var vtop = vv ? vv.offsetTop : 0;
+      var r = spot.getBoundingClientRect();
+      var floating = $recBtn.classList.contains("float");
+      if (r.top < vtop + 6) {
+        if (!floating) {
+          spot.style.height = $recBtn.offsetHeight + "px";
+          $recBtn.classList.add("float");
+        }
+        $recBtn.style.top = (vtop + 6) + "px";
+        $recBtn.style.left = r.left + "px";
+        $recBtn.style.width = r.width + "px";
+      } else if (floating) {
+        $recBtn.classList.remove("float");
+        spot.style.height = "";
+        $recBtn.style.top = $recBtn.style.left = $recBtn.style.width = "";
+      }
+    }
+    function req() { if (!ticking) { ticking = true; requestAnimationFrame(place); } }
+    window.addEventListener("scroll", req, { passive: true });
+    window.addEventListener("resize", req);
+    if (vv) { vv.addEventListener("scroll", req); vv.addEventListener("resize", req); }
+    req();
+  })();
 
   function recLabel() {
     if (recState) {
