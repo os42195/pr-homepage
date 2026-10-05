@@ -259,6 +259,8 @@
     border: 2px solid var(--ai); border-radius: 12px;
     font-variant-numeric: tabular-nums;
   }
+  /* 録音は上に置いて画面の上端に貼り付く（キーボードに隠れないように。2026-10-05 本人指示） */
+  .recbig { position: -webkit-sticky; position: sticky; top: 6px; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
   .recbig:disabled { opacity: .45; cursor: default; }
   .recbig.rec { color: #fff; background: var(--ai); }
   :root[data-theme="dark"] .recbig.rec { color: #1a100d; }
@@ -378,6 +380,8 @@
       </div>
     </div>
 
+    <button class="recbig" id="recBtn" type="button" title="押して話す。もう一回押すと止めて、AIが文字にする（最長5分）">🎤 録音</button>
+
     <div class="keys" id="keys" role="toolbar" aria-label="記号と道具">
       <button class="key" type="button" data-open="「" data-close="」">「」</button>
       <button class="key" type="button" data-open="（" data-close="）">（）</button>
@@ -391,7 +395,6 @@
     <div class="chips" id="teikei" hidden></div>
 
     <textarea id="text" autocapitalize="sentences" autocorrect="on" spellcheck="false" placeholder="ここに書く。「送る」で受信簿へ。勝手には送らない。"></textarea>
-    <button class="recbig" id="recBtn" type="button" title="押して話す。もう一回押すと止めて、AIが文字にする（最長5分）">🎤 録音</button>
     <div class="photos" id="photos" hidden></div>
     <div class="under">
       <div class="under-left">
@@ -486,7 +489,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-05 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-05 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
