@@ -486,7 +486,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-02 c";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-05 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
@@ -1163,6 +1163,29 @@ window.addEventListener("unhandledrejection", function (ev) {
   var REC_MAX_SEC = 300, REC_RATE = 16000;
   var recState = null;       // 録音中: { ctx, src, proc, stream, chunks, len, rate, t0, timer }
   var pendingAudio = null;   // 送れなかった録音（送り直し用）
+  // マイクはページを開いている間だけ使い回す（2026-10-05。押すたびに借りて返すと、iPhoneが毎回許可を聞くため）
+  // 別のアプリに移る・ページを閉じるときに返す
+  var micStream = null;
+  function micAlive() {
+    return micStream && micStream.getAudioTracks().some(function (t) { return t.readyState === "live"; });
+  }
+  function getMic() {
+    if (micAlive()) {
+      micStream.getAudioTracks().forEach(function (t) { t.enabled = true; });
+      return Promise.resolve(micStream);
+    }
+    return navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
+      micStream = stream;
+      return stream;
+    });
+  }
+  function releaseMic() {
+    if (recState) return;   // 録音中は返さない
+    if (micStream) { try { micStream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} }
+    micStream = null;
+  }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) releaseMic(); });
+  window.addEventListener("pagehide", releaseMic);
 
   function recLabel() {
     if (recState) {
@@ -1182,7 +1205,7 @@ window.addEventListener("unhandledrejection", function (ev) {
     var ctx = new AC();   // iPhoneは押した瞬間に作らないと音が止まったままになる
     try { ctx.resume(); } catch (e) {}
     say("");
-    navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
+    getMic().then(function (stream) {
       var src = ctx.createMediaStreamSource(stream);
       var proc = ctx.createScriptProcessor(4096, 1, 1);
       var r = { ctx: ctx, src: src, proc: proc, stream: stream, chunks: [], len: 0, rate: ctx.sampleRate, t0: Date.now() };
@@ -1207,8 +1230,10 @@ window.addEventListener("unhandledrejection", function (ev) {
     recState = null;
     clearInterval(r.timer);
     try { r.src.disconnect(); r.proc.disconnect(); } catch (e) {}
-    try { r.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+    // マイクは返さずに休ませる（次の録音で許可を聞かれないように）。返すのは別のアプリに移ったとき
+    try { r.stream.getAudioTracks().forEach(function (t) { t.enabled = false; }); } catch (e) {}
     try { r.ctx.close(); } catch (e) {}
+    if (document.hidden) releaseMic();
     $recBtn.classList.remove("rec");
     if (r.len < r.rate * 0.8) { recLabel(); armIdle(); toast("短すぎたので送らなかったよ"); return; }
     sendAudio(toWavBlob(r.chunks, r.len, r.rate));
