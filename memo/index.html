@@ -148,10 +148,10 @@
     border-radius: 10px 10px 0 0;
   }
   .save-state {
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: .03em;
+    font-family: var(--mono); font-size: 17px; font-weight: 700; letter-spacing: .03em;
     color: var(--ink-3); display: flex; align-items: center; gap: 6px;
   }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); flex: none; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); flex: none; }
   .save-state[data-state="sent"] { color: var(--ok); }
   .save-state[data-state="sent"] .dot { background: var(--ok); }
   .save-state[data-state="sending"] .dot,
@@ -495,7 +495,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-08 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-08 c";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
