@@ -495,7 +495,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-05 d";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-08 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
@@ -1478,6 +1478,19 @@ window.addEventListener("unhandledrejection", function (ev) {
 
     postIt(payload).then(function (res) {
       sending = false; updateButton();
+      if (res.ok && !res.confirmed) {
+        // 投げ直し（no-cors）は、届いたかどうかページから確かめられない。
+        // 以前は「送った」扱いで文を消していたため、届いていないのに気づけなかった（2026-10-08、PCから送った1件が消えた）。
+        // 文は欄に残し、目立つ注意を出して、本人に受信簿を見てもらう。
+        histAdd("届いたか不明", payload.text);
+        lastSig = payload.date + "\n" + payload.text;
+        lastSentAt = Date.now();
+        saveDraft();
+        armIdle();
+        mark("error", "届いたか不明 " + payload.time);
+        say("受信簿に届いたか分からない（受け皿の返事が読めなかった）。受信簿を開いて、無ければ「いま送る」をもう一度押してね。文はこのまま残してあるよ。", true);
+        return;
+      }
       if (res.ok) {
         histAdd("送った", payload.text);
         lastSig = payload.date + "\n" + payload.text;
