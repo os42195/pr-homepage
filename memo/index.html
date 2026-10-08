@@ -495,7 +495,7 @@ window.addEventListener("unhandledrejection", function (ev) {
   el.textContent = "通信で問題が起きた：" + ((ev.reason && ev.reason.message) || String(ev.reason || "原因不明"));
 });
 (function () {
-  var PAGE_VER = "2026-10-08 a";   // ページを直したら必ず上げる（日付 + a,b,c…）
+  var PAGE_VER = "2026-10-08 b";   // ページを直したら必ず上げる（日付 + a,b,c…）
   var DOW = ["日","月","火","水","木","金","土"];
   var K = { ep: "jushinbo.endpoint", sec: "jushinbo.secret", draft: "jushinbo.draft", log: "jushinbo.log", fillers: "jushinbo.fillers", style: "jushinbo.style", hist: "jushinbo.hist", teikei: "jushinbo.teikei" };
 
@@ -1176,7 +1176,8 @@ window.addEventListener("unhandledrejection", function (ev) {
   // 別のアプリに移る・ページを閉じるときに返す
   var micStream = null;
   function micAlive() {
-    return micStream && micStream.getAudioTracks().some(function (t) { return t.readyState === "live"; });
+    // muted＝iPhoneが裏でマイクを取り上げている（音が0のまま届く）ので、使い回さず借り直す
+    return micStream && micStream.getAudioTracks().some(function (t) { return t.readyState === "live" && !t.muted; });
   }
   function getMic() {
     if (micAlive()) {
@@ -1246,12 +1247,14 @@ window.addEventListener("unhandledrejection", function (ev) {
     try { ctx.resume(); } catch (e) {}
     say("");
     getMic().then(function (stream) {
+      try { if (ctx.state !== "running") ctx.resume(); } catch (e) {}   // 許可の画面を挟むと止まったままのことがある
       var src = ctx.createMediaStreamSource(stream);
       var proc = ctx.createScriptProcessor(4096, 1, 1);
-      var r = { ctx: ctx, src: src, proc: proc, stream: stream, chunks: [], len: 0, rate: ctx.sampleRate, t0: Date.now() };
+      var r = { ctx: ctx, src: src, proc: proc, stream: stream, chunks: [], len: 0, rate: ctx.sampleRate, t0: Date.now(), peak: 0 };
       proc.onaudioprocess = function (e) {
         var d = e.inputBuffer.getChannelData(0);
         r.chunks.push(new Float32Array(d)); r.len += d.length;
+        for (var i = 0; i < d.length; i += 16) { var a = Math.abs(d[i]); if (a > r.peak) r.peak = a; }
       };
       src.connect(proc); proc.connect(ctx.destination);
       recState = r;
@@ -1276,7 +1279,15 @@ window.addEventListener("unhandledrejection", function (ev) {
     if (document.hidden) releaseMic();
     $recBtn.classList.remove("rec");
     if (r.len < r.rate * 0.8) { recLabel(); armIdle(); toast("短すぎたので送らなかったよ"); return; }
-    sendAudio(toWavBlob(r.chunks, r.len, r.rate));
+    // 音が0のまま（マイクが音を拾っていない）なら送らない。次はマイクを借り直す（2026-10-08 b）
+    if (r.peak < 0.003) {
+      if (micStream) { try { micStream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} }
+      micStream = null;
+      recLabel(); armIdle();
+      say("マイクの音が入ってなかった（音の大きさ0）ので送らなかったよ。マイクを借り直すから、もう一度「録音」を押してね。続くときは、ほかのアプリ（電話・音声入力など）がマイクを使っていないか確かめてね。", true);
+      return;
+    }
+    sendAudio(toWavBlob(r.chunks, r.len, r.rate), r.peak);
   }
   // 16kHz・1チャンネルのWAVにする（1分でおよそ2MB）
   function toWavBlob(chunks, len, rate) {
@@ -1305,7 +1316,7 @@ window.addEventListener("unhandledrejection", function (ev) {
       fr.readAsDataURL(blob);
     });
   }
-  function sendAudio(blob) {
+  function sendAudio(blob, peak) {
     tidying = true; updateButton();
     $recBtn.disabled = true; $recBtn.textContent = "文字にしている…";
     mark("sending", "文字にしている…");
@@ -1313,7 +1324,7 @@ window.addEventListener("unhandledrejection", function (ev) {
       return postAction({ action: "transcribe", audio: b64, mime: "audio/wav", style: ($style.value || "").trim() });
     }).then(function (j) {
       var t = String(j.text || "").replace(/^\s+|\s+$/g, "");
-      if (!t) throw new Error("声が聞き取れなかった");
+      if (!t) throw new Error("声が聞き取れなかった（音は届いていて大きさ" + (peak ? Math.round(peak * 100) + "%" : "不明") + "。AIが文字を返さなかった" + (j.note || j.reason ? "：" + (j.note || j.reason) : "") + "）");
       pendingAudio = null;
       var v = $text.value, r = curSel();
       var pre = (r.s > 0 && !/\n$/.test(v.slice(0, r.s))) ? "\n" : "";
